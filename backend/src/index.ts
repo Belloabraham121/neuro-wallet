@@ -113,13 +113,15 @@ process.on("SIGTERM", async () => {
   process.exit(0);
 });
 
-// Start server
-app.listen(PORT, () => {
-  logger.info(`🚀 Server running on port ${PORT}`);
-  logger.info(
-    `📚 API documentation available at http://localhost:${PORT}/api/${API_VERSION}`
-  );
-  logger.info(`🔍 Environment: ${process.env.NODE_ENV}`);
-});
+// Start server only in development mode
+if (process.env.NODE_ENV === "development") {
+  app.listen(PORT, () => {
+    logger.info(`🚀 Server running on port ${PORT}`);
+    logger.info(
+      `📚 API documentation available at http://localhost:${PORT}/api/${API_VERSION}`
+    );
+    logger.info(`🔍 Environment: ${process.env.NODE_ENV}`);
+  });
+}
 
 export default app;
