@@ -26,7 +26,7 @@ const transports = [
         format: winston_1.default.format.combine(winston_1.default.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss:ms" }), winston_1.default.format.colorize({ all: true }), winston_1.default.format.printf((info) => `${info.timestamp} ${info.level}: ${info.message}`)),
     }),
 ];
-if (process.env.NODE_ENV === "production") {
+if (process.env.NODE_ENV === "production" && !process.env.VERCEL && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
     transports.push(new winston_1.default.transports.File({
         filename: path_1.default.join(process.cwd(), "logs", "error.log"),
         level: "error",

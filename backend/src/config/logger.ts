@@ -36,8 +36,8 @@ const transports: winston.transport[] = [
   }),
 ];
 
-// Add file transport in production
-if (process.env.NODE_ENV === "production") {
+// Add file transport in production (but not in serverless environments)
+if (process.env.NODE_ENV === "production" && !process.env.VERCEL && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
   transports.push(
     new winston.transports.File({
       filename: path.join(process.cwd(), "logs", "error.log"),
