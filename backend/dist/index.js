@@ -15,8 +15,8 @@ const client_1 = require("@prisma/client");
 const extension_accelerate_1 = require("@prisma/extension-accelerate");
 const config_1 = require("./config");
 const cors_2 = __importDefault(require("./config/cors"));
-const rateLimit_1 = __importDefault(require("./config/rateLimit"));
-const logger_1 = __importDefault(require("./config/logger"));
+const rateLimit_1 = require("./config/rateLimit");
+const logger_1 = require("./config/logger");
 const errorHandler_1 = __importDefault(require("./middleware/errorHandler"));
 const notFoundHandler_1 = __importDefault(require("./middleware/notFoundHandler"));
 const requestLogger_1 = __importDefault(require("./middleware/requestLogger"));
@@ -51,11 +51,12 @@ if (process.env.NODE_ENV === "development") {
 }
 else {
     app.use((0, morgan_1.default)("combined", {
-        stream: { write: (message) => logger_1.default.info(message.trim()) },
+        stream: { write: (message) => logger_1.logger.info(message.trim()) },
     }));
 }
 app.use(requestLogger_1.default);
-app.use(rateLimit_1.default);
+app.set('trust proxy', true);
+app.use(rateLimit_1.rateLimitConfig);
 app.use(passport_1.default.initialize());
 app.get("/health", (req, res) => {
     res.status(200).json({
@@ -70,20 +71,20 @@ app.use("/api", routes_1.default);
 app.use(notFoundHandler_1.default);
 app.use(errorHandler_1.default);
 process.on("SIGINT", async () => {
-    logger_1.default.info("Received SIGINT, shutting down gracefully...");
+    logger_1.logger.info("Received SIGINT, shutting down gracefully...");
     await exports.prisma.$disconnect();
     process.exit(0);
 });
 process.on("SIGTERM", async () => {
-    logger_1.default.info("Received SIGTERM, shutting down gracefully...");
+    logger_1.logger.info("Received SIGTERM, shutting down gracefully...");
     await exports.prisma.$disconnect();
     process.exit(0);
 });
 if (process.env.NODE_ENV === "development") {
     app.listen(PORT, () => {
-        logger_1.default.info(`🚀 Server running on port ${PORT}`);
-        logger_1.default.info(`📚 API documentation available at http://localhost:${PORT}/api/${API_VERSION}`);
-        logger_1.default.info(`🔍 Environment: ${process.env.NODE_ENV}`);
+        logger_1.logger.info(`🚀 Server running on port ${PORT}`);
+        logger_1.logger.info(`📚 API documentation available at http://localhost:${PORT}/api/${API_VERSION}`);
+        logger_1.logger.info(`🔍 Environment: ${process.env.NODE_ENV}`);
     });
 }
 exports.default = app;

@@ -9,8 +9,8 @@ import { PrismaClient } from "@prisma/client";
 import { withAccelerate } from "@prisma/extension-accelerate";
 import { config } from "./config";
 import corsConfig from "./config/cors";
-import rateLimitConfig from "./config/rateLimit";
-import logger, { morganStream } from "./config/logger";
+import { rateLimitConfig } from "./config/rateLimit";
+import { logger } from "./config/logger";
 import errorHandler from "./middleware/errorHandler";
 import notFoundHandler from "./middleware/notFoundHandler";
 import requestLogger from "./middleware/requestLogger";
@@ -73,6 +73,9 @@ if (process.env.NODE_ENV === "development") {
 
 // Custom request logging
 app.use(requestLogger);
+
+// Trust proxy for serverless environments (Vercel)
+app.set('trust proxy', true);
 
 // Rate limiting
 app.use(rateLimitConfig);
