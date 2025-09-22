@@ -15,7 +15,6 @@ const client_1 = require("@prisma/client");
 const extension_accelerate_1 = require("@prisma/extension-accelerate");
 const config_1 = require("./config");
 const cors_2 = __importDefault(require("./config/cors"));
-const rateLimit_1 = require("./config/rateLimit");
 const logger_1 = require("./config/logger");
 const errorHandler_1 = __importDefault(require("./middleware/errorHandler"));
 const notFoundHandler_1 = __importDefault(require("./middleware/notFoundHandler"));
@@ -55,8 +54,6 @@ else {
     }));
 }
 app.use(requestLogger_1.default);
-app.set('trust proxy', true);
-app.use(rateLimit_1.rateLimitConfig);
 app.use(passport_1.default.initialize());
 app.get("/health", (req, res) => {
     res.status(200).json({

@@ -2,7 +2,7 @@ import { Router } from "express";
 import { body } from "express-validator";
 import { authenticateJWT } from "../middleware/auth";
 import { ApiKeyController } from "../controllers/apiKeyController";
-import { apiKeyRateLimit } from "../config/rateLimit";
+// import { apiKeyRateLimit } from "../config/rateLimit"; // Disabled for development
 
 const router = Router();
 
@@ -28,7 +28,7 @@ const createApiKeyValidation = [
 router.post(
   "/",
   authenticateJWT,
-  apiKeyRateLimit,
+  // apiKeyRateLimit, // Disabled for development
   createApiKeyValidation,
   ApiKeyController.createApiKey
 );
@@ -51,7 +51,7 @@ router.get(
 router.put(
   "/:id",
   authenticateJWT,
-  apiKeyRateLimit,
+  // apiKeyRateLimit, // Disabled for development
   ApiKeyController.updateApiKey
 );
 
@@ -59,7 +59,7 @@ router.put(
 router.delete(
   "/:id",
   authenticateJWT,
-  apiKeyRateLimit,
+  // apiKeyRateLimit, // Disabled for development
   ApiKeyController.deleteApiKey
 );
 

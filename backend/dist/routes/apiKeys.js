@@ -4,7 +4,6 @@ const express_1 = require("express");
 const express_validator_1 = require("express-validator");
 const auth_1 = require("../middleware/auth");
 const apiKeyController_1 = require("../controllers/apiKeyController");
-const rateLimit_1 = require("../config/rateLimit");
 const router = (0, express_1.Router)();
 const createApiKeyValidation = [
     (0, express_validator_1.body)("name")
@@ -20,11 +19,11 @@ const createApiKeyValidation = [
         .isISO8601()
         .withMessage("Expires at must be a valid date"),
 ];
-router.post("/", auth_1.authenticateJWT, rateLimit_1.apiKeyRateLimit, createApiKeyValidation, apiKeyController_1.ApiKeyController.createApiKey);
+router.post("/", auth_1.authenticateJWT, createApiKeyValidation, apiKeyController_1.ApiKeyController.createApiKey);
 router.get("/", auth_1.authenticateJWT, apiKeyController_1.ApiKeyController.getApiKeys);
 router.get("/:id", auth_1.authenticateJWT, apiKeyController_1.ApiKeyController.getApiKey);
-router.put("/:id", auth_1.authenticateJWT, rateLimit_1.apiKeyRateLimit, apiKeyController_1.ApiKeyController.updateApiKey);
-router.delete("/:id", auth_1.authenticateJWT, rateLimit_1.apiKeyRateLimit, apiKeyController_1.ApiKeyController.deleteApiKey);
+router.put("/:id", auth_1.authenticateJWT, apiKeyController_1.ApiKeyController.updateApiKey);
+router.delete("/:id", auth_1.authenticateJWT, apiKeyController_1.ApiKeyController.deleteApiKey);
 router.post("/validate", apiKeyController_1.ApiKeyController.validateApiKey);
 exports.default = router;
 //# sourceMappingURL=apiKeys.js.map

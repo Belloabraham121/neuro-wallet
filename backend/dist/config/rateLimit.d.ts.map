@@ -1,1 +1,1 @@
-{"version":3,"file":"rateLimit.d.ts","sourceRoot":"","sources":["../../src/config/rateLimit.ts"],"names":[],"mappings":"AAGA,eAAO,MAAM,eAAe,sDAa1B,CAAC;AAGH,eAAO,MAAM,aAAa,sDASxB,CAAC;AAGH,eAAO,MAAM,eAAe,sDAS1B,CAAC;AAGH,eAAO,MAAM,eAAe,sDAS1B,CAAC;AAEH,eAAe,eAAe,CAAC"}
+{"version":3,"file":"rateLimit.d.ts","sourceRoot":"","sources":["../../src/config/rateLimit.ts"],"names":[],"mappings":"AAmBA,eAAO,MAAM,eAAe,GAAI,KAAK,GAAG,EAAE,KAAK,GAAG,EAAE,MAAM,GAAG,QAAW,CAAC;AAsCzE,eAAe,eAAe,CAAC"}

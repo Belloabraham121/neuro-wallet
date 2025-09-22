@@ -74,11 +74,8 @@ if (process.env.NODE_ENV === "development") {
 // Custom request logging
 app.use(requestLogger);
 
-// Trust proxy for serverless environments (Vercel)
-app.set('trust proxy', true);
-
-// Rate limiting
-app.use(rateLimitConfig);
+// Rate limiting - disabled for development to avoid proxy conflicts
+// app.use(rateLimitConfig);
 
 // Initialize Passport
 app.use(passport.initialize());
