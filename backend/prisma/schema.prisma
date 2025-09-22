@@ -1,0 +1,205 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  firstName String?
+  lastName  String?
+  password  String?  // Nullable for social auth users
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  apiKeys           ApiKey[]
+  wallets           Wallet[]
+  socialAuthMappings SocialAuthMapping[]
+  sessions          Session[]
+
+  @@map("users")
+}
+
+model ApiKey {
+  id          String   @id @default(cuid())
+  name        String
+  keyHash     String   @unique // Hashed version of the API key
+  keyPrefix   String   // First 8 characters for identification
+  permissions Json     @default("{}")
+  isActive    Boolean  @default(true)
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Usage tracking
+  usageCount Int @default(0)
+  rateLimit  Int @default(1000) // Requests per hour
+
+  @@map("api_keys")
+}
+
+model Wallet {
+  id              String   @id @default(cuid())
+  address         String   @unique
+  publicKey       String
+  encryptedPrivateKey String // Encrypted with user's derived key
+  walletType      WalletType @default(STANDARD)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  transactions Transaction[]
+  socialAuthMappings SocialAuthMapping[]
+
+  // Metadata
+  metadata Json @default("{}")
+
+  @@map("wallets")
+}
+
+model SocialAuthMapping {
+  id           String     @id @default(cuid())
+  provider     AuthProvider
+  providerId   String     // Google ID, phone number, etc.
+  providerData Json       @default("{}")
+  isVerified   Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // Relations
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  walletId String?
+  wallet   Wallet? @relation(fields: [walletId], references: [id], onDelete: SetNull)
+
+  @@unique([provider, providerId])
+  @@map("social_auth_mappings")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Session metadata
+  ipAddress String?
+  userAgent String?
+  isActive  Boolean @default(true)
+
+  @@map("sessions")
+}
+
+model Transaction {
+  id          String            @id @default(cuid())
+  txId        String?           @unique // Stacks transaction ID
+  type        TransactionType
+  status      TransactionStatus @default(PENDING)
+  amount      String?           // For STX transfers
+  recipient   String?           // Recipient address
+  contractAddress String?       // For contract calls
+  functionName String?          // For contract calls
+  functionArgs Json?            // For contract calls
+  fee         String?           // Transaction fee
+  nonce       Int?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  // Relations
+  walletId String
+  wallet   Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  // Metadata
+  metadata Json @default("{}")
+
+  @@map("transactions")
+}
+
+model PhoneVerification {
+  id          String   @id @default(cuid())
+  phoneNumber String
+  code        String
+  expiresAt   DateTime
+  isVerified  Boolean  @default(false)
+  attempts    Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([phoneNumber, code])
+  @@map("phone_verifications")
+}
+
+model EmailVerification {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  isVerified Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("email_verifications")
+}
+
+model Analytics {
+  id        String   @id @default(cuid())
+  event     String
+  data      Json     @default("{}")
+  userId    String?
+  walletId  String?
+  apiKeyId  String?
+  createdAt DateTime @default(now())
+
+  @@map("analytics")
+}
+
+// Enums
+enum WalletType {
+  STANDARD
+  SOCIAL_GOOGLE
+  SOCIAL_PHONE
+  MULTISIG
+}
+
+enum AuthProvider {
+  GOOGLE
+  PHONE
+  EMAIL
+}
+
+enum TransactionType {
+  STX_TRANSFER
+  CONTRACT_CALL
+  CONTRACT_DEPLOY
+  TOKEN_TRANSFER
+}
+
+enum TransactionStatus {
+  PENDING
+  CONFIRMED
+  FAILED
+  CANCELLED
+}
