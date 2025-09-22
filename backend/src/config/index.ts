@@ -10,7 +10,12 @@ const missingEnvVars = requiredEnvVars.filter((envVar) => !process.env[envVar]);
 
 if (missingEnvVars.length > 0) {
   console.error("Missing required environment variables:", missingEnvVars);
-  process.exit(1);
+  // In serverless environments, throw an error instead of exiting
+  if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    throw new Error(`Missing required environment variables: ${missingEnvVars.join(", ")}`);
+  } else {
+    process.exit(1);
+  }
 }
 
 export const config = {

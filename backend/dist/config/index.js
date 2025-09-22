@@ -10,7 +10,12 @@ const requiredEnvVars = ["DATABASE_URL", "JWT_SECRET", "JWT_REFRESH_SECRET"];
 const missingEnvVars = requiredEnvVars.filter((envVar) => !process.env[envVar]);
 if (missingEnvVars.length > 0) {
     console.error("Missing required environment variables:", missingEnvVars);
-    process.exit(1);
+    if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+        throw new Error(`Missing required environment variables: ${missingEnvVars.join(", ")}`);
+    }
+    else {
+        process.exit(1);
+    }
 }
 exports.config = {
     port: parseInt(process.env.PORT || "3000"),
