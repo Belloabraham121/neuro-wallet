@@ -7,44 +7,45 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
-import { Shield, Bell, Database, Key, Copy, Eye, EyeOff, Trash2, Plus } from "lucide-react"
-import { useState } from "react"
+import { Shield, Bell, Database, Key, Copy, Eye, EyeOff, Trash2, Plus, LogOut, User, Loader2 } from "lucide-react"
+import { useState, useEffect } from "react"
+import { useLogout } from "@/hooks/use-auth"
+import { useApiKeys } from "@/hooks/use-api-keys"
+import { toast } from "sonner"
 
 export function SettingsTab() {
-  const [apiKeys, setApiKeys] = useState([
-    { id: "1", name: "Production API", key: "sk_live_1234567890abcdef", created: "2024-01-15", lastUsed: "2024-01-20" },
-    {
-      id: "2",
-      name: "Development API",
-      key: "sk_test_abcdef1234567890",
-      created: "2024-01-10",
-      lastUsed: "2024-01-19",
-    },
-  ])
+  const { logout } = useLogout()
+  const { isLoading, apiKeys, fetchApiKeys, createApiKey, deleteApiKey } = useApiKeys()
   const [showKeys, setShowKeys] = useState<{ [key: string]: boolean }>({})
   const [newKeyName, setNewKeyName] = useState("")
+  const [generatedKey, setGeneratedKey] = useState<string | null>(null)
+  const [showGeneratedKey, setShowGeneratedKey] = useState(false)
 
-  const generateApiKey = () => {
-    if (!newKeyName.trim()) return
+  useEffect(() => {
+    fetchApiKeys()
+  }, [fetchApiKeys])
 
-    const newKey = {
-      id: Date.now().toString(),
-      name: newKeyName,
-      key: `sk_live_${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`,
-      created: new Date().toISOString().split("T")[0],
-      lastUsed: "Never",
+  const handleGenerateApiKey = async () => {
+    if (!newKeyName.trim()) {
+      toast.error('Please enter a name for the API key')
+      return
     }
 
-    setApiKeys([...apiKeys, newKey])
-    setNewKeyName("")
+    const result = await createApiKey({ name: newKeyName })
+    if (result) {
+      setGeneratedKey(result.apiKey)
+      setShowGeneratedKey(true)
+      setNewKeyName("")
+    }
   }
 
-  const deleteApiKey = (id: string) => {
-    setApiKeys(apiKeys.filter((key) => key.id !== id))
+  const handleDeleteApiKey = async (id: string) => {
+    await deleteApiKey(id)
   }
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
+    toast.success('Copied to clipboard')
   }
 
   const toggleKeyVisibility = (id: string) => {
@@ -52,11 +53,40 @@ export function SettingsTab() {
   }
 
   const maskKey = (key: string) => {
-    return key.substring(0, 12) + "..." + key.substring(key.length - 4)
+    if (key.length <= 8) return key
+    return key.substring(0, 8) + "..."
   }
 
   return (
     <div className="space-y-6">
+      {/* Account Management */}
+      <Card className="glass">
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <User className="h-5 w-5 mr-2 text-primary" />
+            Account Management
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between p-4 border border-border/50 rounded-lg bg-background/10">
+            <div className="space-y-1">
+              <h4 className="font-medium">Sign Out</h4>
+              <p className="text-sm text-muted-foreground">
+                Sign out of your account and clear all session data
+              </p>
+            </div>
+            <Button 
+              variant="destructive" 
+              onClick={logout}
+              className="flex items-center gap-2"
+            >
+              <LogOut className="h-4 w-4" />
+              Sign Out
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card className="glass">
         <CardHeader>
           <CardTitle className="flex items-center">
@@ -79,13 +109,51 @@ export function SettingsTab() {
                 />
               </div>
               <div className="flex items-end">
-                <Button onClick={generateApiKey} className="flex items-center gap-2">
-                  <Plus className="h-4 w-4" />
+                <Button 
+                  onClick={handleGenerateApiKey} 
+                  disabled={isLoading}
+                  className="flex items-center gap-2"
+                >
+                  {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
                   Generate Key
                 </Button>
               </div>
             </div>
           </div>
+
+          {/* Generated API Key Display */}
+          {showGeneratedKey && generatedKey && (
+            <div className="space-y-4 p-4 border border-green-500/50 rounded-lg bg-green-500/10">
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium text-green-700 dark:text-green-300">New API Key Generated</h4>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setShowGeneratedKey(false)}
+                >
+                  ×
+                </Button>
+              </div>
+              <div className="space-y-2">
+                <p className="text-sm text-green-600 dark:text-green-400">
+                  ⚠️ Copy this key now - it won't be shown again!
+                </p>
+                <div className="font-mono text-sm bg-background/30 p-3 rounded border flex items-center justify-between">
+                  <span className="break-all">{generatedKey}</span>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => {
+                      navigator.clipboard.writeText(generatedKey)
+                      toast.success('API key copied to clipboard')
+                    }}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Existing API Keys */}
           <div className="space-y-4">
@@ -100,20 +168,21 @@ export function SettingsTab() {
                       <div>
                         <h5 className="font-medium">{apiKey.name}</h5>
                         <p className="text-xs text-muted-foreground">
-                          Created: {apiKey.created} • Last used: {apiKey.lastUsed}
+                          Created: {new Date(apiKey.createdAt).toLocaleDateString()} • Last used: {apiKey.lastUsedAt ? new Date(apiKey.lastUsedAt).toLocaleDateString() : 'Never'}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
                         <Button variant="ghost" size="sm" onClick={() => toggleKeyVisibility(apiKey.id)}>
                           {showKeys[apiKey.id] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => copyToClipboard(apiKey.key)}>
+                        <Button variant="ghost" size="sm" onClick={() => copyToClipboard(apiKey.keyPrefix + '...')}>
                           <Copy className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => deleteApiKey(apiKey.id)}
+                          onClick={() => handleDeleteApiKey(apiKey.id)}
+                          disabled={isLoading}
                           className="text-destructive hover:text-destructive"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -121,7 +190,7 @@ export function SettingsTab() {
                       </div>
                     </div>
                     <div className="font-mono text-sm bg-background/30 p-2 rounded border">
-                      {showKeys[apiKey.id] ? apiKey.key : maskKey(apiKey.key)}
+                      {showKeys[apiKey.id] ? apiKey.keyPrefix + '...' : maskKey(apiKey.keyPrefix + '...')}
                     </div>
                   </div>
                 ))}

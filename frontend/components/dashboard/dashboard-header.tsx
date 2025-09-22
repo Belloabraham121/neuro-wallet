@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Brain, Settings, LogOut, User } from "lucide-react"
 import Link from "next/link"
+import { useLogout } from "@/hooks/use-auth"
 
 interface DashboardHeaderProps {
   tabs: { id: string; label: string }[]
@@ -14,6 +15,7 @@ interface DashboardHeaderProps {
 }
 
 export function DashboardHeader({ tabs, activeTab, onTabChange, onAIAssistantToggle }: DashboardHeaderProps) {
+  const { logout } = useLogout()
   return (
     <header className="border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-16 items-center justify-between px-6">
@@ -75,7 +77,7 @@ export function DashboardHeader({ tabs, activeTab, onTabChange, onAIAssistantTog
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Settings</span>
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={logout}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>
               </DropdownMenuItem>
