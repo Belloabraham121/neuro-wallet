@@ -1,6 +1,5 @@
 import { EventEmitter } from 'eventemitter3';
 import {
-  AICommand,
   AIResponse,
   NeuroWalletError,
   SDKEvents
@@ -10,17 +9,18 @@ import {
  * AI Assistant - Handles natural language commands and intelligent automation
  */
 export class AIAssistant extends EventEmitter<SDKEvents> {
-  private client: any; // Will be properly typed when client is complete
+  // @ts-ignore
+  private _client: any; // Will be properly typed when client is complete
 
   constructor(client: any) {
     super();
-    this.client = client;
+    this._client = client;
   }
 
   /**
    * Process a natural language command
    */
-  async processCommand(command: string, context?: any): Promise<AIResponse> {
+  async processCommand(_command: string, _context?: any): Promise<AIResponse> {
     try {
       // Implementation will be added
       throw new NeuroWalletError('Not implemented yet', 'NOT_IMPLEMENTED');
@@ -33,7 +33,7 @@ export class AIAssistant extends EventEmitter<SDKEvents> {
   /**
    * Get AI-powered insights
    */
-  async getInsights(data: any): Promise<AIResponse> {
+  async getInsights(_data: any): Promise<AIResponse> {
     try {
       // Implementation will be added
       throw new NeuroWalletError('Not implemented yet', 'NOT_IMPLEMENTED');
@@ -46,7 +46,7 @@ export class AIAssistant extends EventEmitter<SDKEvents> {
   /**
    * Generate transaction explanation
    */
-  async explainTransaction(txId: string): Promise<string> {
+  async explainTransaction(_txId: string): Promise<string> {
     try {
       // Implementation will be added
       throw new NeuroWalletError('Not implemented yet', 'NOT_IMPLEMENTED');

@@ -28,39 +28,39 @@ class WalletManager extends eventemitter3.EventEmitter {
     /**
      * Create a new wallet
      */
-    async createWallet(options = {}) {
+    async createWallet(_options = {}) {
         try {
             // Implementation will be added
-            throw new NeuroWalletError('Not implemented yet', 'NOT_IMPLEMENTED');
+            throw new NeuroWalletError("Not implemented yet", "NOT_IMPLEMENTED");
         }
         catch (error) {
-            this.emit('error', error);
+            this.emit("error", error);
             throw error;
         }
     }
     /**
      * Import an existing wallet
      */
-    async importWallet(privateKey) {
+    async importWallet(_privateKey) {
         try {
             // Implementation will be added
-            throw new NeuroWalletError('Not implemented yet', 'NOT_IMPLEMENTED');
+            throw new NeuroWalletError("Not implemented yet", "NOT_IMPLEMENTED");
         }
         catch (error) {
-            this.emit('error', error);
+            this.emit("error", error);
             throw error;
         }
     }
     /**
      * Get wallet information
      */
-    async getWallet(address) {
+    async getWallet(_address) {
         try {
             // Implementation will be added
-            throw new NeuroWalletError('Not implemented yet', 'NOT_IMPLEMENTED');
+            throw new NeuroWalletError("Not implemented yet", "NOT_IMPLEMENTED");
         }
         catch (error) {
-            this.emit('error', error);
+            this.emit("error", error);
             throw error;
         }
     }
@@ -70,7 +70,103 @@ class WalletManager extends eventemitter3.EventEmitter {
     async listWallets() {
         try {
             // Implementation will be added
-            throw new NeuroWalletError('Not implemented yet', 'NOT_IMPLEMENTED');
+            throw new NeuroWalletError("Not implemented yet", "NOT_IMPLEMENTED");
+        }
+        catch (error) {
+            this.emit("error", error);
+            throw error;
+        }
+    }
+    /**
+     * Create a social wallet with Google authentication
+     */
+    async createSocialWalletGoogle(options) {
+        try {
+            const response = await this.client.api.post('/wallets/social/google', {
+                provider: 'GOOGLE',
+                providerId: options.userInfo?.email || 'google_user',
+                providerData: {
+                    googleToken: options.googleToken,
+                    userInfo: options.userInfo,
+                },
+            });
+            const result = {
+                wallet: {
+                    address: response.data.wallet.address,
+                    publicKey: response.data.wallet.publicKey,
+                    walletType: 'SOCIAL',
+                    isActive: response.data.wallet.isActive,
+                    metadata: response.data.wallet.metadata,
+                },
+                user: response.data.user,
+                tokens: response.data.tokens,
+            };
+            this.emit('wallet:social:created', result);
+            return result;
+        }
+        catch (error) {
+            this.emit('error', error);
+            throw new NeuroWalletError(error instanceof Error ? error.message : 'Failed to create Google social wallet', 'SOCIAL_WALLET_CREATION_FAILED');
+        }
+    }
+    /**
+     * Create a social wallet with phone authentication
+     */
+    async createSocialWalletPhone(options) {
+        try {
+            if (!options.verificationCode) {
+                throw new NeuroWalletError('Verification code is required for phone authentication', 'VERIFICATION_CODE_REQUIRED');
+            }
+            const response = await this.client.api.post('/wallets/social/phone', {
+                provider: 'PHONE',
+                providerId: options.phoneNumber,
+                verificationCode: options.verificationCode,
+            });
+            const result = {
+                wallet: {
+                    address: response.data.wallet.address,
+                    publicKey: response.data.wallet.publicKey,
+                    walletType: 'SOCIAL',
+                    isActive: response.data.wallet.isActive,
+                    metadata: response.data.wallet.metadata,
+                },
+                user: response.data.user,
+                tokens: response.data.tokens,
+            };
+            this.emit('wallet:social:created', result);
+            return result;
+        }
+        catch (error) {
+            this.emit('error', error);
+            throw new NeuroWalletError(error instanceof Error ? error.message : 'Failed to create phone social wallet', 'SOCIAL_WALLET_CREATION_FAILED');
+        }
+    }
+    /**
+     * Create a social wallet with generic social auth options
+     */
+    async createSocialWallet(options) {
+        try {
+            if (options.provider === 'GOOGLE') {
+                if (!options.providerData?.['googleToken']) {
+                    throw new NeuroWalletError('Google token is required', 'GOOGLE_TOKEN_REQUIRED');
+                }
+                return this.createSocialWalletGoogle({
+                    googleToken: options.providerData['googleToken'],
+                    userInfo: options.providerData['userInfo'],
+                });
+            }
+            else if (options.provider === 'PHONE') {
+                if (!options.verificationCode) {
+                    throw new NeuroWalletError('Verification code is required for phone authentication', 'VERIFICATION_CODE_REQUIRED');
+                }
+                return this.createSocialWalletPhone({
+                    phoneNumber: options.providerId,
+                    verificationCode: options.verificationCode,
+                });
+            }
+            else {
+                throw new NeuroWalletError(`Unsupported social provider: ${options.provider}`, 'UNSUPPORTED_PROVIDER');
+            }
         }
         catch (error) {
             this.emit('error', error);
@@ -85,57 +181,57 @@ class WalletManager extends eventemitter3.EventEmitter {
 class TransactionManager extends eventemitter3.EventEmitter {
     constructor(client) {
         super();
-        this.client = client;
+        this._client = client;
     }
     /**
      * Send STX tokens
      */
-    async sendSTX(options) {
+    async sendSTX(_options) {
         try {
             // Implementation will be added
-            throw new NeuroWalletError('Not implemented yet', 'NOT_IMPLEMENTED');
+            throw new NeuroWalletError("Not implemented yet", "NOT_IMPLEMENTED");
         }
         catch (error) {
-            this.emit('error', error);
+            this.emit("error", error);
             throw error;
         }
     }
     /**
      * Call a smart contract function
      */
-    async callContract(options) {
+    async callContract(_options) {
         try {
             // Implementation will be added
-            throw new NeuroWalletError('Not implemented yet', 'NOT_IMPLEMENTED');
+            throw new NeuroWalletError("Not implemented yet", "NOT_IMPLEMENTED");
         }
         catch (error) {
-            this.emit('error', error);
+            this.emit("error", error);
             throw error;
         }
     }
     /**
      * Get transaction status
      */
-    async getTransaction(txId) {
+    async getTransaction(_txId) {
         try {
             // Implementation will be added
-            throw new NeuroWalletError('Not implemented yet', 'NOT_IMPLEMENTED');
+            throw new NeuroWalletError("Not implemented yet", "NOT_IMPLEMENTED");
         }
         catch (error) {
-            this.emit('error', error);
+            this.emit("error", error);
             throw error;
         }
     }
     /**
      * Estimate transaction fee
      */
-    async estimateFee(options) {
+    async estimateFee(_options) {
         try {
             // Implementation will be added
-            throw new NeuroWalletError('Not implemented yet', 'NOT_IMPLEMENTED');
+            throw new NeuroWalletError("Not implemented yet", "NOT_IMPLEMENTED");
         }
         catch (error) {
-            this.emit('error', error);
+            this.emit("error", error);
             throw error;
         }
     }
@@ -147,12 +243,12 @@ class TransactionManager extends eventemitter3.EventEmitter {
 class AuthManager extends eventemitter3.EventEmitter {
     constructor(client) {
         super();
-        this.client = client;
+        this._client = client;
     }
     /**
      * Connect to a Stacks wallet
      */
-    async connect(options) {
+    async connect(_options) {
         try {
             // Implementation will be added
             throw new NeuroWalletError('Not implemented yet', 'NOT_IMPLEMENTED');
@@ -189,20 +285,85 @@ class AuthManager extends eventemitter3.EventEmitter {
         // Implementation will be added
         return null;
     }
+    /**
+     * Send phone verification code
+     */
+    async sendPhoneVerificationCode(phoneNumber) {
+        try {
+            const response = await this._client.api.post('/auth/phone/send-code', {
+                phoneNumber,
+            });
+            this.emit('phone:verification:sent', { phoneNumber });
+            return {
+                success: true,
+                message: response.data.message || 'Verification code sent successfully',
+            };
+        }
+        catch (error) {
+            this.emit('error', error);
+            throw new NeuroWalletError(error instanceof Error ? error.message : 'Failed to send verification code', 'PHONE_VERIFICATION_FAILED');
+        }
+    }
+    /**
+     * Verify phone number with code
+     */
+    async verifyPhoneNumber(phoneNumber, verificationCode) {
+        try {
+            const response = await this._client.api.post('/auth/phone/verify', {
+                phoneNumber,
+                verificationCode,
+            });
+            const result = {
+                success: response.data.success,
+                verified: response.data.verified,
+                message: response.data.message || 'Phone verification completed',
+                user: response.data.user,
+                tokens: response.data.tokens,
+            };
+            if (result.success) {
+                this.emit('phone:verification:success', result);
+            }
+            else {
+                this.emit('phone:verification:failed', { phoneNumber });
+            }
+            return result;
+        }
+        catch (error) {
+            this.emit('error', error);
+            throw new NeuroWalletError(error instanceof Error ? error.message : 'Failed to verify phone number', 'PHONE_VERIFICATION_FAILED');
+        }
+    }
+    /**
+     * Login with phone number (after verification)
+     */
+    async loginWithPhone(phoneNumber, verificationCode) {
+        try {
+            const response = await this._client.api.post('/auth/phone/login', {
+                phoneNumber,
+                verificationCode,
+            });
+            this.emit('auth:login:success', response.data);
+            return response.data;
+        }
+        catch (error) {
+            this.emit('error', error);
+            throw new NeuroWalletError(error instanceof Error ? error.message : 'Failed to login with phone', 'PHONE_LOGIN_FAILED');
+        }
+    }
 }
 
 /**
- * Compliance Manager - Handles AI-powered compliance and risk assessment
+ * Compliance Manager - Handles regulatory compliance and risk assessment
  */
 class ComplianceManager extends eventemitter3.EventEmitter {
     constructor(client) {
         super();
-        this.client = client;
+        this._client = client;
     }
     /**
-     * Assess transaction risk
+     * Assess transaction risk before execution
      */
-    async assessTransactionRisk(transaction) {
+    async assessTransactionRisk(_transaction) {
         try {
             // Implementation will be added
             throw new NeuroWalletError('Not implemented yet', 'NOT_IMPLEMENTED');
@@ -213,9 +374,9 @@ class ComplianceManager extends eventemitter3.EventEmitter {
         }
     }
     /**
-     * Check address compliance
+     * Check if address is compliant
      */
-    async checkAddress(address) {
+    async checkAddress(_address) {
         try {
             // Implementation will be added
             throw new NeuroWalletError('Not implemented yet', 'NOT_IMPLEMENTED');
@@ -226,9 +387,9 @@ class ComplianceManager extends eventemitter3.EventEmitter {
         }
     }
     /**
-     * Monitor transactions for compliance
+     * Monitor transaction for compliance
      */
-    async monitorTransaction(txId) {
+    async monitorTransaction(_txId) {
         try {
             // Implementation will be added
             throw new NeuroWalletError('Not implemented yet', 'NOT_IMPLEMENTED');
@@ -246,12 +407,12 @@ class ComplianceManager extends eventemitter3.EventEmitter {
 class AnalyticsManager extends eventemitter3.EventEmitter {
     constructor(client) {
         super();
-        this.client = client;
+        this._client = client;
     }
     /**
      * Get transaction analytics
      */
-    async getTransactionAnalytics(timeRange) {
+    async getTransactionAnalytics(_timeRange) {
         try {
             // Implementation will be added
             throw new NeuroWalletError('Not implemented yet', 'NOT_IMPLEMENTED');
@@ -277,7 +438,7 @@ class AnalyticsManager extends eventemitter3.EventEmitter {
     /**
      * Track custom event
      */
-    async trackEvent(event, data) {
+    async trackEvent(_event, _data) {
         try {
             // Implementation will be added
             throw new NeuroWalletError('Not implemented yet', 'NOT_IMPLEMENTED');
@@ -295,12 +456,12 @@ class AnalyticsManager extends eventemitter3.EventEmitter {
 class AIAssistant extends eventemitter3.EventEmitter {
     constructor(client) {
         super();
-        this.client = client;
+        this._client = client;
     }
     /**
      * Process a natural language command
      */
-    async processCommand(command, context) {
+    async processCommand(_command, _context) {
         try {
             // Implementation will be added
             throw new NeuroWalletError('Not implemented yet', 'NOT_IMPLEMENTED');
@@ -313,7 +474,7 @@ class AIAssistant extends eventemitter3.EventEmitter {
     /**
      * Get AI-powered insights
      */
-    async getInsights(data) {
+    async getInsights(_data) {
         try {
             // Implementation will be added
             throw new NeuroWalletError('Not implemented yet', 'NOT_IMPLEMENTED');
@@ -326,7 +487,7 @@ class AIAssistant extends eventemitter3.EventEmitter {
     /**
      * Generate transaction explanation
      */
-    async explainTransaction(txId) {
+    async explainTransaction(_txId) {
         try {
             // Implementation will be added
             throw new NeuroWalletError('Not implemented yet', 'NOT_IMPLEMENTED');
@@ -343,51 +504,91 @@ class AIAssistant extends eventemitter3.EventEmitter {
 // Temporary network implementations
 class StacksMainnet {
     constructor() {
-        this.coreApiUrl = 'https://api.mainnet.hiro.so';
+        this.coreApiUrl = "https://api.mainnet.hiro.so";
         this.version = { mainnet: 1, testnet: 0 };
         this.chainId = 1;
     }
-    getBroadcastApiUrl() { return `${this.coreApiUrl}/v2/transactions`; }
-    getTransferFeeEstimateApiUrl() { return `${this.coreApiUrl}/v2/fees/transfer`; }
-    getAccountApiUrl(address) { return `${this.coreApiUrl}/v2/accounts/${address}`; }
-    getAbiApiUrl(address, contract) { return `${this.coreApiUrl}/v2/contracts/interface/${address}/${contract}`; }
-    getReadOnlyFunctionCallApiUrl(address, contract, fn) { return `${this.coreApiUrl}/v2/contracts/call-read/${address}/${contract}/${fn}`; }
+    getBroadcastApiUrl() {
+        return `${this.coreApiUrl}/v2/transactions`;
+    }
+    getTransferFeeEstimateApiUrl() {
+        return `${this.coreApiUrl}/v2/fees/transfer`;
+    }
+    getAccountApiUrl(address) {
+        return `${this.coreApiUrl}/v2/accounts/${address}`;
+    }
+    getAbiApiUrl(address, contract) {
+        return `${this.coreApiUrl}/v2/contracts/interface/${address}/${contract}`;
+    }
+    getReadOnlyFunctionCallApiUrl(address, contract, fn) {
+        return `${this.coreApiUrl}/v2/contracts/call-read/${address}/${contract}/${fn}`;
+    }
 }
 class StacksTestnet {
     constructor() {
-        this.coreApiUrl = 'https://api.testnet.hiro.so';
+        this.coreApiUrl = "https://api.testnet.hiro.so";
         this.version = { mainnet: 0, testnet: 1 };
         this.chainId = 2147483648;
     }
-    getBroadcastApiUrl() { return `${this.coreApiUrl}/v2/transactions`; }
-    getTransferFeeEstimateApiUrl() { return `${this.coreApiUrl}/v2/fees/transfer`; }
-    getAccountApiUrl(address) { return `${this.coreApiUrl}/v2/accounts/${address}`; }
-    getAbiApiUrl(address, contract) { return `${this.coreApiUrl}/v2/contracts/interface/${address}/${contract}`; }
-    getReadOnlyFunctionCallApiUrl(address, contract, fn) { return `${this.coreApiUrl}/v2/contracts/call-read/${address}/${contract}/${fn}`; }
+    getBroadcastApiUrl() {
+        return `${this.coreApiUrl}/v2/transactions`;
+    }
+    getTransferFeeEstimateApiUrl() {
+        return `${this.coreApiUrl}/v2/fees/transfer`;
+    }
+    getAccountApiUrl(address) {
+        return `${this.coreApiUrl}/v2/accounts/${address}`;
+    }
+    getAbiApiUrl(address, contract) {
+        return `${this.coreApiUrl}/v2/contracts/interface/${address}/${contract}`;
+    }
+    getReadOnlyFunctionCallApiUrl(address, contract, fn) {
+        return `${this.coreApiUrl}/v2/contracts/call-read/${address}/${contract}/${fn}`;
+    }
 }
 class StacksDevnet {
     constructor() {
-        this.coreApiUrl = 'http://localhost:3999';
+        this.coreApiUrl = "http://localhost:3999";
         this.version = { mainnet: 0, testnet: 1 };
         this.chainId = 2147483648;
     }
-    getBroadcastApiUrl() { return `${this.coreApiUrl}/v2/transactions`; }
-    getTransferFeeEstimateApiUrl() { return `${this.coreApiUrl}/v2/fees/transfer`; }
-    getAccountApiUrl(address) { return `${this.coreApiUrl}/v2/accounts/${address}`; }
-    getAbiApiUrl(address, contract) { return `${this.coreApiUrl}/v2/contracts/interface/${address}/${contract}`; }
-    getReadOnlyFunctionCallApiUrl(address, contract, fn) { return `${this.coreApiUrl}/v2/contracts/call-read/${address}/${contract}/${fn}`; }
+    getBroadcastApiUrl() {
+        return `${this.coreApiUrl}/v2/transactions`;
+    }
+    getTransferFeeEstimateApiUrl() {
+        return `${this.coreApiUrl}/v2/fees/transfer`;
+    }
+    getAccountApiUrl(address) {
+        return `${this.coreApiUrl}/v2/accounts/${address}`;
+    }
+    getAbiApiUrl(address, contract) {
+        return `${this.coreApiUrl}/v2/contracts/interface/${address}/${contract}`;
+    }
+    getReadOnlyFunctionCallApiUrl(address, contract, fn) {
+        return `${this.coreApiUrl}/v2/contracts/call-read/${address}/${contract}/${fn}`;
+    }
 }
 class StacksMocknet {
     constructor() {
-        this.coreApiUrl = 'http://localhost:3999';
+        this.coreApiUrl = "http://localhost:3999";
         this.version = { mainnet: 0, testnet: 1 };
         this.chainId = 2147483648;
     }
-    getBroadcastApiUrl() { return `${this.coreApiUrl}/v2/transactions`; }
-    getTransferFeeEstimateApiUrl() { return `${this.coreApiUrl}/v2/fees/transfer`; }
-    getAccountApiUrl(address) { return `${this.coreApiUrl}/v2/accounts/${address}`; }
-    getAbiApiUrl(address, contract) { return `${this.coreApiUrl}/v2/contracts/interface/${address}/${contract}`; }
-    getReadOnlyFunctionCallApiUrl(address, contract, fn) { return `${this.coreApiUrl}/v2/contracts/call-read/${address}/${contract}/${fn}`; }
+    getBroadcastApiUrl() {
+        return `${this.coreApiUrl}/v2/transactions`;
+    }
+    getTransferFeeEstimateApiUrl() {
+        return `${this.coreApiUrl}/v2/fees/transfer`;
+    }
+    getAccountApiUrl(address) {
+        return `${this.coreApiUrl}/v2/accounts/${address}`;
+    }
+    getAbiApiUrl(address, contract) {
+        return `${this.coreApiUrl}/v2/contracts/interface/${address}/${contract}`;
+    }
+    getReadOnlyFunctionCallApiUrl(address, contract, fn) {
+        return `${this.coreApiUrl}/v2/contracts/call-read/${address}/${contract}/${fn}`;
+    }
 }
 /**
  * Main NeuroWallet SDK Client
@@ -440,13 +641,13 @@ class NeuroWalletClient extends eventemitter3.EventEmitter {
      */
     getNetworkType() {
         const url = this.config.network.coreApiUrl;
-        if (url.includes('mainnet'))
-            return 'mainnet';
-        if (url.includes('testnet'))
-            return 'testnet';
-        if (url.includes('devnet'))
-            return 'devnet';
-        return 'mocknet';
+        if (url.includes("mainnet"))
+            return "mainnet";
+        if (url.includes("testnet"))
+            return "testnet";
+        if (url.includes("devnet"))
+            return "devnet";
+        return "mocknet";
     }
     /**
      * Check if the SDK is properly configured
@@ -459,7 +660,7 @@ class NeuroWalletClient extends eventemitter3.EventEmitter {
      */
     getStatus() {
         return {
-            version: '1.0.0',
+            version: "1.0.0",
             network: this.getNetworkType(),
             configured: this.isConfigured(),
             modules: {
@@ -468,8 +669,8 @@ class NeuroWalletClient extends eventemitter3.EventEmitter {
                 auth: true,
                 compliance: this.config.enableCompliance ?? true,
                 analytics: this.config.enableAnalytics ?? true,
-                ai: this.config.aiAssistant?.enabled ?? false
-            }
+                ai: this.config.aiAssistant?.enabled ?? false,
+            },
         };
     }
     /**
@@ -477,13 +678,13 @@ class NeuroWalletClient extends eventemitter3.EventEmitter {
      */
     validateConfig(config) {
         if (!config.apiKey) {
-            throw new NeuroWalletError('API key is required', 'INVALID_CONFIG');
+            throw new NeuroWalletError("API key is required", "INVALID_CONFIG");
         }
         if (!config.network) {
-            throw new NeuroWalletError('Network configuration is required', 'INVALID_CONFIG');
+            throw new NeuroWalletError("Network configuration is required", "INVALID_CONFIG");
         }
         if (config.aiAssistant?.enabled && !config.aiAssistant.apiKey) {
-            throw new NeuroWalletError('AI Assistant API key is required when AI is enabled', 'INVALID_CONFIG');
+            throw new NeuroWalletError("AI Assistant API key is required when AI is enabled", "INVALID_CONFIG");
         }
     }
     /**
@@ -495,10 +696,10 @@ class NeuroWalletClient extends eventemitter3.EventEmitter {
             coreApiUrl: network.coreApiUrl,
             broadcastEndpoint: network.getBroadcastApiUrl(),
             transferFeeEstimateEndpoint: network.getTransferFeeEstimateApiUrl(),
-            accountEndpoint: network.getAccountApiUrl(''),
-            contractAbiEndpoint: network.getAbiApiUrl('', ''),
-            readOnlyFunctionCallEndpoint: network.getReadOnlyFunctionCallApiUrl('', '', ''),
-            transactionVersion: network.version
+            accountEndpoint: network.getAccountApiUrl(""),
+            contractAbiEndpoint: network.getAbiApiUrl("", ""),
+            readOnlyFunctionCallEndpoint: network.getReadOnlyFunctionCallApiUrl("", "", ""),
+            transactionVersion: network.version,
         };
     }
     /**
@@ -506,12 +707,12 @@ class NeuroWalletClient extends eventemitter3.EventEmitter {
      */
     setupErrorHandling() {
         // Handle uncaught errors from modules
-        this.wallet.on('error', (error) => this.emit('error', error));
-        this.transaction.on('error', (error) => this.emit('error', error));
-        this.auth.on('error', (error) => this.emit('error', error));
-        this.compliance.on('error', (error) => this.emit('error', error));
-        this.analytics.on('error', (error) => this.emit('error', error));
-        this.ai.on('error', (error) => this.emit('error', error));
+        this.wallet.on("error", (error) => this.emit("error", error));
+        this.transaction.on("error", (error) => this.emit("error", error));
+        this.auth.on("error", (error) => this.emit("error", error));
+        this.compliance.on("error", (error) => this.emit("error", error));
+        this.analytics.on("error", (error) => this.emit("error", error));
+        this.ai.on("error", (error) => this.emit("error", error));
     }
     /**
      * Create a new NeuroWallet client instance
@@ -526,28 +727,28 @@ class NeuroWalletClient extends eventemitter3.EventEmitter {
         return new NeuroWalletClient({
             apiKey,
             network: new StacksMainnet(),
-            ...options
+            ...options,
         });
     }
     static createForTestnet(apiKey, options) {
         return new NeuroWalletClient({
             apiKey,
             network: new StacksTestnet(),
-            ...options
+            ...options,
         });
     }
     static createForDevnet(apiKey, options) {
         return new NeuroWalletClient({
             apiKey,
             network: new StacksDevnet(),
-            ...options
+            ...options,
         });
     }
     static createForMocknet(apiKey, options) {
         return new NeuroWalletClient({
             apiKey,
             network: new StacksMocknet(),
-            ...options
+            ...options,
         });
     }
 }
@@ -637,85 +838,85 @@ function deepClone(obj) {
  * Constants for the Neuro Wallet SDK
  */
 // SDK Information
-const SDK_NAME = '@neuro-wallet/sdk';
+const SDK_NAME = "@neuro-wallet/sdk";
 // Network URLs
 const NETWORK_URLS = {
-    MAINNET: 'https://api.mainnet.hiro.so',
-    TESTNET: 'https://api.testnet.hiro.so',
-    DEVNET: 'http://localhost:3999',
-    MOCKNET: 'http://localhost:3999'
+    MAINNET: "https://api.mainnet.hiro.so",
+    TESTNET: "https://api.testnet.hiro.so",
+    DEVNET: "http://localhost:3999",
+    MOCKNET: "http://localhost:3999",
 };
 // Chain IDs
 const CHAIN_IDS = {
     MAINNET: 1,
-    TESTNET: 2147483648
+    TESTNET: 2147483648,
 };
 // Transaction Types
 const TRANSACTION_TYPES = {
-    STX_TRANSFER: 'stx_transfer',
-    CONTRACT_CALL: 'contract_call',
-    CONTRACT_DEPLOY: 'contract_deploy',
-    COINBASE: 'coinbase',
-    POISON_MICROBLOCK: 'poison_microblock'
+    STX_TRANSFER: "stx_transfer",
+    CONTRACT_CALL: "contract_call",
+    CONTRACT_DEPLOY: "contract_deploy",
+    COINBASE: "coinbase",
+    POISON_MICROBLOCK: "poison_microblock",
 };
 // Transaction Status
 const TRANSACTION_STATUS = {
-    PENDING: 'pending',
-    SUCCESS: 'success',
-    FAILED: 'failed',
-    DROPPED: 'dropped',
-    ABORT_BY_RESPONSE: 'abort_by_response',
-    ABORT_BY_POST_CONDITION: 'abort_by_post_condition'
+    PENDING: "pending",
+    SUCCESS: "success",
+    FAILED: "failed",
+    DROPPED: "dropped",
+    ABORT_BY_RESPONSE: "abort_by_response",
+    ABORT_BY_POST_CONDITION: "abort_by_post_condition",
 };
 // Wallet Types
 const WALLET_TYPES = {
-    CUSTODIAL: 'CUSTODIAL',
-    NON_CUSTODIAL: 'NON_CUSTODIAL',
-    SOCIAL: 'SOCIAL'
+    CUSTODIAL: "CUSTODIAL",
+    NON_CUSTODIAL: "NON_CUSTODIAL",
+    SOCIAL: "SOCIAL",
 };
 // Risk Levels
 const RISK_LEVELS = {
-    LOW: 'LOW',
-    MEDIUM: 'MEDIUM',
-    HIGH: 'HIGH',
-    CRITICAL: 'CRITICAL'
+    LOW: "LOW",
+    MEDIUM: "MEDIUM",
+    HIGH: "HIGH",
+    CRITICAL: "CRITICAL",
 };
 // Risk Score Thresholds
 const RISK_THRESHOLDS = {
     LOW: 25,
     MEDIUM: 50,
     HIGH: 75,
-    CRITICAL: 90
+    CRITICAL: 90,
 };
 // Social Providers
 const SOCIAL_PROVIDERS = {
-    GOOGLE: 'GOOGLE',
-    PHONE: 'PHONE',
-    EMAIL: 'EMAIL'
+    GOOGLE: "GOOGLE",
+    PHONE: "PHONE",
+    EMAIL: "EMAIL",
 };
 // Error Codes
 const ERROR_CODES = {
-    INVALID_CONFIG: 'INVALID_CONFIG',
-    NETWORK_ERROR: 'NETWORK_ERROR',
-    AUTHENTICATION_ERROR: 'AUTHENTICATION_ERROR',
-    WALLET_ERROR: 'WALLET_ERROR',
-    TRANSACTION_ERROR: 'TRANSACTION_ERROR',
-    COMPLIANCE_ERROR: 'COMPLIANCE_ERROR',
-    AI_ERROR: 'AI_ERROR',
-    NOT_IMPLEMENTED: 'NOT_IMPLEMENTED',
-    INSUFFICIENT_FUNDS: 'INSUFFICIENT_FUNDS',
-    INVALID_ADDRESS: 'INVALID_ADDRESS',
-    INVALID_AMOUNT: 'INVALID_AMOUNT',
-    RATE_LIMITED: 'RATE_LIMITED'
+    INVALID_CONFIG: "INVALID_CONFIG",
+    NETWORK_ERROR: "NETWORK_ERROR",
+    AUTHENTICATION_ERROR: "AUTHENTICATION_ERROR",
+    WALLET_ERROR: "WALLET_ERROR",
+    TRANSACTION_ERROR: "TRANSACTION_ERROR",
+    COMPLIANCE_ERROR: "COMPLIANCE_ERROR",
+    AI_ERROR: "AI_ERROR",
+    NOT_IMPLEMENTED: "NOT_IMPLEMENTED",
+    INSUFFICIENT_FUNDS: "INSUFFICIENT_FUNDS",
+    INVALID_ADDRESS: "INVALID_ADDRESS",
+    INVALID_AMOUNT: "INVALID_AMOUNT",
+    RATE_LIMITED: "RATE_LIMITED",
 };
 // API Endpoints
 const API_ENDPOINTS = {
-    TRANSACTIONS: '/v2/transactions',
-    ACCOUNTS: '/v2/accounts',
-    CONTRACTS: '/v2/contracts',
-    FEES: '/v2/fees',
-    INFO: '/v2/info',
-    BLOCKS: '/v2/blocks'
+    TRANSACTIONS: "/v2/transactions",
+    ACCOUNTS: "/v2/accounts",
+    CONTRACTS: "/v2/contracts",
+    FEES: "/v2/fees",
+    INFO: "/v2/info",
+    BLOCKS: "/v2/blocks",
 };
 // Default Configuration
 const DEFAULT_CONFIG = {
@@ -723,7 +924,7 @@ const DEFAULT_CONFIG = {
     ENABLE_COMPLIANCE: true,
     REQUEST_TIMEOUT: 30000,
     MAX_RETRIES: 3,
-    RETRY_DELAY: 1000
+    RETRY_DELAY: 1000,
 };
 // STX Precision
 const STX_DECIMALS = 6;
@@ -732,13 +933,13 @@ const MICRO_STX_PER_STX = 1000000;
 const GAS_LIMITS = {
     DEFAULT: 10000,
     CONTRACT_CALL: 15000,
-    CONTRACT_DEPLOY: 50000
+    CONTRACT_DEPLOY: 50000,
 };
 // Fee Estimates
 const FEE_ESTIMATES = {
     LOW: 1000,
     MEDIUM: 2000,
-    HIGH: 5000
+    HIGH: 5000,
 };
 
 /**

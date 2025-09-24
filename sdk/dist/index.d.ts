@@ -47,6 +47,37 @@ interface CreateWalletOptions {
     socialProvider?: 'GOOGLE' | 'PHONE' | 'EMAIL';
     metadata?: Record<string, any>;
 }
+interface SocialAuthOptions {
+    provider: 'GOOGLE' | 'PHONE';
+    providerId: string;
+    providerData?: Record<string, any>;
+    verificationCode?: string;
+}
+interface PhoneAuthOptions {
+    phoneNumber: string;
+    verificationCode?: string;
+}
+interface GoogleAuthOptions {
+    googleToken: string;
+    userInfo?: {
+        email: string;
+        name?: string;
+        picture?: string;
+    };
+}
+interface SocialWalletResult {
+    wallet: WalletInfo;
+    user: {
+        id: string;
+        email?: string;
+        firstName?: string;
+        lastName?: string;
+    };
+    tokens: {
+        accessToken: string;
+        refreshToken: string;
+    };
+}
 interface WalletKeys {
     privateKey: string;
     publicKey: string;
@@ -86,6 +117,20 @@ interface RiskAssessment {
     flags: string[];
     explanation: string;
     recommendations: string[];
+}
+interface AddressCompliance {
+    address: string;
+    isBlacklisted: boolean;
+    isSanctioned: boolean;
+    riskFactors: string[];
+    confidence: number;
+}
+interface TransactionMonitor {
+    txId: string;
+    complianceStatus: 'COMPLIANT' | 'FLAGGED' | 'BLOCKED';
+    monitoringEvents: string[];
+    lastChecked: Date;
+    recommendations?: string[];
 }
 interface ComplianceCheck {
     address: string;
@@ -137,6 +182,18 @@ interface AuthResult {
     userData: any;
     appPrivateKey: string;
 }
+interface PhoneVerificationResult {
+    success: boolean;
+    verified: boolean;
+    message: string;
+    sessionId?: string;
+    expiresAt?: Date;
+    user?: any;
+    tokens?: {
+        accessToken: string;
+        refreshToken: string;
+    };
+}
 declare class NeuroWalletError extends Error {
     code: string;
     details?: any;
@@ -145,12 +202,37 @@ declare class NeuroWalletError extends Error {
 interface SDKEvents {
     'wallet:created': WalletInfo;
     'wallet:imported': WalletInfo;
+    'wallet:deleted': {
+        address: string;
+    };
+    'wallet:updated': WalletInfo;
+    'wallet:social:created': SocialWalletResult;
     'transaction:sent': TransactionResult;
     'transaction:confirmed': TransactionResult;
-    'transaction:failed': TransactionResult;
+    'transaction:failed': {
+        error: string;
+        txId?: string;
+    };
     'compliance:flagged': RiskAssessment;
-    'auth:connected': AuthResult;
+    'auth:connected': {
+        address: string;
+    };
     'auth:disconnected': void;
+    'auth:login:success': any;
+    'phone:code:sent': {
+        phoneNumber: string;
+    };
+    'phone:verified': PhoneVerificationResult;
+    'phone:verification:sent': {
+        phoneNumber: string;
+    };
+    'phone:verification:success': PhoneVerificationResult;
+    'phone:verification:failed': {
+        phoneNumber: string;
+        error?: string;
+    };
+    'auth:phone:code-sent': PhoneVerificationResult;
+    'auth:phone:verified': PhoneVerificationResult;
     'error': NeuroWalletError;
 }
 type EventCallback<T = any> = (data: T) => void;
@@ -168,55 +250,67 @@ declare class WalletManager extends EventEmitter<SDKEvents> {
     /**
      * Create a new wallet
      */
-    createWallet(options?: CreateWalletOptions): Promise<WalletInfo>;
+    createWallet(_options?: CreateWalletOptions): Promise<WalletInfo>;
     /**
      * Import an existing wallet
      */
-    importWallet(privateKey: string): Promise<WalletInfo>;
+    importWallet(_privateKey: string): Promise<WalletInfo>;
     /**
      * Get wallet information
      */
-    getWallet(address: string): Promise<WalletInfo>;
+    getWallet(_address: string): Promise<WalletInfo>;
     /**
      * List all wallets
      */
     listWallets(): Promise<WalletInfo[]>;
+    /**
+     * Create a social wallet with Google authentication
+     */
+    createSocialWalletGoogle(options: GoogleAuthOptions): Promise<SocialWalletResult>;
+    /**
+     * Create a social wallet with phone authentication
+     */
+    createSocialWalletPhone(options: PhoneAuthOptions): Promise<SocialWalletResult>;
+    /**
+     * Create a social wallet with generic social auth options
+     */
+    createSocialWallet(options: SocialAuthOptions): Promise<SocialWalletResult>;
 }
 
 /**
  * Transaction Manager - Handles transaction creation, signing, and broadcasting
  */
 declare class TransactionManager extends EventEmitter<SDKEvents> {
-    private client;
+    private _client;
     constructor(client: any);
     /**
      * Send STX tokens
      */
-    sendSTX(options: TransactionOptions): Promise<TransactionResult>;
+    sendSTX(_options: TransactionOptions): Promise<TransactionResult>;
     /**
      * Call a smart contract function
      */
-    callContract(options: ContractCallOptions): Promise<TransactionResult>;
+    callContract(_options: ContractCallOptions): Promise<TransactionResult>;
     /**
      * Get transaction status
      */
-    getTransaction(txId: string): Promise<TransactionResult>;
+    getTransaction(_txId: string): Promise<TransactionResult>;
     /**
      * Estimate transaction fee
      */
-    estimateFee(options: TransactionOptions | ContractCallOptions): Promise<string>;
+    estimateFee(_options: TransactionOptions | ContractCallOptions): Promise<string>;
 }
 
 /**
  * Authentication Manager - Handles Stacks Connect integration
  */
 declare class AuthManager extends EventEmitter<SDKEvents> {
-    private client;
+    private _client;
     constructor(client: any);
     /**
      * Connect to a Stacks wallet
      */
-    connect(options: AuthOptions): Promise<AuthResult>;
+    connect(_options: AuthOptions): Promise<AuthResult>;
     /**
      * Disconnect from wallet
      */
@@ -229,38 +323,53 @@ declare class AuthManager extends EventEmitter<SDKEvents> {
      * Get current user session
      */
     getUserSession(): any;
+    /**
+     * Send phone verification code
+     */
+    sendPhoneVerificationCode(phoneNumber: string): Promise<{
+        success: boolean;
+        message: string;
+    }>;
+    /**
+     * Verify phone number with code
+     */
+    verifyPhoneNumber(phoneNumber: string, verificationCode: string): Promise<PhoneVerificationResult>;
+    /**
+     * Login with phone number (after verification)
+     */
+    loginWithPhone(phoneNumber: string, verificationCode: string): Promise<any>;
 }
 
 /**
- * Compliance Manager - Handles AI-powered compliance and risk assessment
+ * Compliance Manager - Handles regulatory compliance and risk assessment
  */
 declare class ComplianceManager extends EventEmitter<SDKEvents> {
-    private client;
+    private _client;
     constructor(client: any);
     /**
-     * Assess transaction risk
+     * Assess transaction risk before execution
      */
-    assessTransactionRisk(transaction: any): Promise<RiskAssessment>;
+    assessTransactionRisk(_transaction: any): Promise<RiskAssessment>;
     /**
-     * Check address compliance
+     * Check if address is compliant
      */
-    checkAddress(address: string): Promise<ComplianceCheck>;
+    checkAddress(_address: string): Promise<AddressCompliance>;
     /**
-     * Monitor transactions for compliance
+     * Monitor transaction for compliance
      */
-    monitorTransaction(txId: string): Promise<RiskAssessment>;
+    monitorTransaction(_txId: string): Promise<TransactionMonitor>;
 }
 
 /**
  * Analytics Manager - Handles transaction and wallet analytics
  */
 declare class AnalyticsManager extends EventEmitter<SDKEvents> {
-    private client;
+    private _client;
     constructor(client: any);
     /**
      * Get transaction analytics
      */
-    getTransactionAnalytics(timeRange?: {
+    getTransactionAnalytics(_timeRange?: {
         start: Date;
         end: Date;
     }): Promise<TransactionAnalytics>;
@@ -271,27 +380,27 @@ declare class AnalyticsManager extends EventEmitter<SDKEvents> {
     /**
      * Track custom event
      */
-    trackEvent(event: string, data?: any): Promise<void>;
+    trackEvent(_event: string, _data?: any): Promise<void>;
 }
 
 /**
  * AI Assistant - Handles natural language commands and intelligent automation
  */
 declare class AIAssistant extends EventEmitter<SDKEvents> {
-    private client;
+    private _client;
     constructor(client: any);
     /**
      * Process a natural language command
      */
-    processCommand(command: string, context?: any): Promise<AIResponse>;
+    processCommand(_command: string, _context?: any): Promise<AIResponse>;
     /**
      * Get AI-powered insights
      */
-    getInsights(data: any): Promise<AIResponse>;
+    getInsights(_data: any): Promise<AIResponse>;
     /**
      * Generate transaction explanation
      */
-    explainTransaction(txId: string): Promise<string>;
+    explainTransaction(_txId: string): Promise<string>;
 }
 
 /**
@@ -510,4 +619,4 @@ declare const SDK_VERSION = "1.0.0";
 declare function createClient(config: NeuroWalletConfig): NeuroWalletClient;
 
 export { AIAssistant, API_ENDPOINTS, AnalyticsManager, AuthManager, CHAIN_IDS, ComplianceManager, DEFAULT_CONFIG, ERROR_CODES, FEE_ESTIMATES, GAS_LIMITS, MICRO_STX_PER_STX, NETWORK_URLS, NeuroWalletClient, NeuroWalletError, RISK_LEVELS, RISK_THRESHOLDS, SDK_NAME, SDK_VERSION, SOCIAL_PROVIDERS, STX_DECIMALS, TRANSACTION_STATUS, TRANSACTION_TYPES, TransactionManager, WALLET_TYPES, WalletManager, createClient, deepClone, NeuroWalletClient as default, formatSTX, isValidStacksAddress, randomHex, retry, sleep, toMicroSTX };
-export type { AICommand, AIResponse, AuthOptions, AuthResult, ComplianceCheck, ContractCallOptions, CreateWalletOptions, EventCallback, NetworkConfig, NetworkType, NeuroWalletConfig, RiskAssessment, RiskLevel, SDKEvents, StacksNetwork, TransactionAnalytics, TransactionOptions, TransactionResult, TransactionStatus, TransactionVersion, WalletAnalytics, WalletInfo, WalletKeys, WalletType };
+export type { AICommand, AIResponse, AddressCompliance, AuthOptions, AuthResult, ComplianceCheck, ContractCallOptions, CreateWalletOptions, EventCallback, GoogleAuthOptions, NetworkConfig, NetworkType, NeuroWalletConfig, PhoneAuthOptions, PhoneVerificationResult, RiskAssessment, RiskLevel, SDKEvents, SocialAuthOptions, SocialWalletResult, StacksNetwork, TransactionAnalytics, TransactionMonitor, TransactionOptions, TransactionResult, TransactionStatus, TransactionVersion, WalletAnalytics, WalletInfo, WalletKeys, WalletType };

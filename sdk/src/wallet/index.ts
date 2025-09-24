@@ -2,7 +2,6 @@ import { EventEmitter } from "eventemitter3";
 import {
   WalletInfo,
   CreateWalletOptions,
-  WalletKeys,
   NeuroWalletError,
   SDKEvents,
   SocialAuthOptions,
@@ -25,7 +24,7 @@ export class WalletManager extends EventEmitter<SDKEvents> {
   /**
    * Create a new wallet
    */
-  async createWallet(options: CreateWalletOptions = {}): Promise<WalletInfo> {
+  async createWallet(_options: CreateWalletOptions = {}): Promise<WalletInfo> {
     try {
       // Implementation will be added
       throw new NeuroWalletError("Not implemented yet", "NOT_IMPLEMENTED");
@@ -38,7 +37,7 @@ export class WalletManager extends EventEmitter<SDKEvents> {
   /**
    * Import an existing wallet
    */
-  async importWallet(privateKey: string): Promise<WalletInfo> {
+  async importWallet(_privateKey: string): Promise<WalletInfo> {
     try {
       // Implementation will be added
       throw new NeuroWalletError("Not implemented yet", "NOT_IMPLEMENTED");
@@ -51,7 +50,7 @@ export class WalletManager extends EventEmitter<SDKEvents> {
   /**
    * Get wallet information
    */
-  async getWallet(address: string): Promise<WalletInfo> {
+  async getWallet(_address: string): Promise<WalletInfo> {
     try {
       // Implementation will be added
       throw new NeuroWalletError("Not implemented yet", "NOT_IMPLEMENTED");

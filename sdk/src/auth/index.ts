@@ -11,17 +11,17 @@ import {
  * Authentication Manager - Handles Stacks Connect integration
  */
 export class AuthManager extends EventEmitter<SDKEvents> {
-  private client: any; // Will be properly typed when client is complete
+  private _client: any; // Will be properly typed when client is complete
 
   constructor(client: any) {
     super();
-    this.client = client;
+    this._client = client;
   }
 
   /**
    * Connect to a Stacks wallet
    */
-  async connect(options: AuthOptions): Promise<AuthResult> {
+  async connect(_options: AuthOptions): Promise<AuthResult> {
     try {
       // Implementation will be added
       throw new NeuroWalletError('Not implemented yet', 'NOT_IMPLEMENTED');
@@ -65,7 +65,7 @@ export class AuthManager extends EventEmitter<SDKEvents> {
    */
   async sendPhoneVerificationCode(phoneNumber: string): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await this.client.api.post('/auth/phone/send-code', {
+      const response = await this._client.api.post('/auth/phone/send-code', {
         phoneNumber,
       });
 
@@ -88,7 +88,7 @@ export class AuthManager extends EventEmitter<SDKEvents> {
    */
   async verifyPhoneNumber(phoneNumber: string, verificationCode: string): Promise<PhoneVerificationResult> {
     try {
-      const response = await this.client.api.post('/auth/phone/verify', {
+      const response = await this._client.api.post('/auth/phone/verify', {
         phoneNumber,
         verificationCode,
       });
@@ -122,7 +122,7 @@ export class AuthManager extends EventEmitter<SDKEvents> {
    */
   async loginWithPhone(phoneNumber: string, verificationCode: string): Promise<any> {
     try {
-      const response = await this.client.api.post('/auth/phone/login', {
+      const response = await this._client.api.post('/auth/phone/login', {
         phoneNumber,
         verificationCode,
       });

@@ -91,7 +91,6 @@ import {
   NetworkConfig,
   NetworkType,
   SDKEvents,
-  EventCallback,
   NeuroWalletError,
   StacksNetwork,
 } from "../types";

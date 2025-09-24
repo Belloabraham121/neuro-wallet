@@ -10,17 +10,18 @@ import {
  * Analytics Manager - Handles transaction and wallet analytics
  */
 export class AnalyticsManager extends EventEmitter<SDKEvents> {
-  private client: any; // Will be properly typed when client is complete
+  // @ts-ignore
+  private _client: any; // Will be properly typed when client is complete
 
   constructor(client: any) {
     super();
-    this.client = client;
+    this._client = client;
   }
 
   /**
    * Get transaction analytics
    */
-  async getTransactionAnalytics(timeRange?: { start: Date; end: Date }): Promise<TransactionAnalytics> {
+  async getTransactionAnalytics(_timeRange?: { start: Date; end: Date }): Promise<TransactionAnalytics> {
     try {
       // Implementation will be added
       throw new NeuroWalletError('Not implemented yet', 'NOT_IMPLEMENTED');
@@ -46,7 +47,7 @@ export class AnalyticsManager extends EventEmitter<SDKEvents> {
   /**
    * Track custom event
    */
-  async trackEvent(event: string, data?: any): Promise<void> {
+  async trackEvent(_event: string, _data?: any): Promise<void> {
     try {
       // Implementation will be added
       throw new NeuroWalletError('Not implemented yet', 'NOT_IMPLEMENTED');

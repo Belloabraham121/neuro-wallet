@@ -11,17 +11,18 @@ import {
  * Transaction Manager - Handles transaction creation, signing, and broadcasting
  */
 export class TransactionManager extends EventEmitter<SDKEvents> {
-  private client: any; // Will be properly typed when client is complete
+  // @ts-ignore
+  private _client: any; // Will be properly typed when client is complete
 
   constructor(client: any) {
     super();
-    this.client = client;
+    this._client = client;
   }
 
   /**
    * Send STX tokens
    */
-  async sendSTX(options: TransactionOptions): Promise<TransactionResult> {
+  async sendSTX(_options: TransactionOptions): Promise<TransactionResult> {
     try {
       // Implementation will be added
       throw new NeuroWalletError("Not implemented yet", "NOT_IMPLEMENTED");
@@ -34,7 +35,7 @@ export class TransactionManager extends EventEmitter<SDKEvents> {
   /**
    * Call a smart contract function
    */
-  async callContract(options: ContractCallOptions): Promise<TransactionResult> {
+  async callContract(_options: ContractCallOptions): Promise<TransactionResult> {
     try {
       // Implementation will be added
       throw new NeuroWalletError("Not implemented yet", "NOT_IMPLEMENTED");
@@ -47,7 +48,7 @@ export class TransactionManager extends EventEmitter<SDKEvents> {
   /**
    * Get transaction status
    */
-  async getTransaction(txId: string): Promise<TransactionResult> {
+  async getTransaction(_txId: string): Promise<TransactionResult> {
     try {
       // Implementation will be added
       throw new NeuroWalletError("Not implemented yet", "NOT_IMPLEMENTED");
@@ -61,7 +62,7 @@ export class TransactionManager extends EventEmitter<SDKEvents> {
    * Estimate transaction fee
    */
   async estimateFee(
-    options: TransactionOptions | ContractCallOptions
+    _options: TransactionOptions | ContractCallOptions
   ): Promise<string> {
     try {
       // Implementation will be added

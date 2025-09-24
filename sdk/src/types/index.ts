@@ -142,6 +142,22 @@ export interface RiskAssessment {
   recommendations: string[];
 }
 
+export interface AddressCompliance {
+  address: string;
+  isBlacklisted: boolean;
+  isSanctioned: boolean;
+  riskFactors: string[];
+  confidence: number;
+}
+
+export interface TransactionMonitor {
+  txId: string;
+  complianceStatus: 'COMPLIANT' | 'FLAGGED' | 'BLOCKED';
+  monitoringEvents: string[];
+  lastChecked: Date;
+  recommendations?: string[];
+}
+
 export interface ComplianceCheck {
   address: string;
   isBlacklisted: boolean;

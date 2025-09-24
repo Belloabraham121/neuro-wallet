@@ -1,26 +1,28 @@
 import { EventEmitter } from 'eventemitter3';
 import {
   RiskAssessment,
-  ComplianceCheck,
+  AddressCompliance,
+  TransactionMonitor,
   NeuroWalletError,
   SDKEvents
 } from '../types';
 
 /**
- * Compliance Manager - Handles AI-powered compliance and risk assessment
+ * Compliance Manager - Handles regulatory compliance and risk assessment
  */
 export class ComplianceManager extends EventEmitter<SDKEvents> {
-  private client: any; // Will be properly typed when client is complete
+  // @ts-ignore
+  private _client: any; // Will be properly typed when client is complete
 
   constructor(client: any) {
     super();
-    this.client = client;
+    this._client = client;
   }
 
   /**
-   * Assess transaction risk
+   * Assess transaction risk before execution
    */
-  async assessTransactionRisk(transaction: any): Promise<RiskAssessment> {
+  async assessTransactionRisk(_transaction: any): Promise<RiskAssessment> {
     try {
       // Implementation will be added
       throw new NeuroWalletError('Not implemented yet', 'NOT_IMPLEMENTED');
@@ -31,9 +33,9 @@ export class ComplianceManager extends EventEmitter<SDKEvents> {
   }
 
   /**
-   * Check address compliance
+   * Check if address is compliant
    */
-  async checkAddress(address: string): Promise<ComplianceCheck> {
+  async checkAddress(_address: string): Promise<AddressCompliance> {
     try {
       // Implementation will be added
       throw new NeuroWalletError('Not implemented yet', 'NOT_IMPLEMENTED');
@@ -44,9 +46,9 @@ export class ComplianceManager extends EventEmitter<SDKEvents> {
   }
 
   /**
-   * Monitor transactions for compliance
+   * Monitor transaction for compliance
    */
-  async monitorTransaction(txId: string): Promise<RiskAssessment> {
+  async monitorTransaction(_txId: string): Promise<TransactionMonitor> {
     try {
       // Implementation will be added
       throw new NeuroWalletError('Not implemented yet', 'NOT_IMPLEMENTED');
