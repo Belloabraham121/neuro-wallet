@@ -14,7 +14,7 @@
   "license": "ISC",
   "description": "Example usage of Neuro Stacks SDK",
   "dependencies": {
-    "neuro-stacks-sdk": "^1.0.0"
+    "neuro-stacks-sdk": "file:../neuro-wallet"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
