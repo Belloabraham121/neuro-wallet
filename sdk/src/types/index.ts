@@ -59,6 +59,42 @@ export interface CreateWalletOptions {
   metadata?: Record<string, any>;
 }
 
+// Social Authentication Types
+export interface SocialAuthOptions {
+  provider: 'GOOGLE' | 'PHONE';
+  providerId: string;
+  providerData?: Record<string, any>;
+  verificationCode?: string;
+}
+
+export interface PhoneAuthOptions {
+  phoneNumber: string;
+  verificationCode?: string;
+}
+
+export interface GoogleAuthOptions {
+  googleToken: string;
+  userInfo?: {
+    email: string;
+    name?: string;
+    picture?: string;
+  };
+}
+
+export interface SocialWalletResult {
+  wallet: WalletInfo;
+  user: {
+    id: string;
+    email?: string;
+    firstName?: string;
+    lastName?: string;
+  };
+  tokens: {
+    accessToken: string;
+    refreshToken: string;
+  };
+}
+
 export interface WalletKeys {
   privateKey: string;
   publicKey: string;
@@ -166,6 +202,19 @@ export interface AuthResult {
   appPrivateKey: string;
 }
 
+export interface PhoneVerificationResult {
+  success: boolean;
+  verified: boolean;
+  message: string;
+  sessionId?: string;
+  expiresAt?: Date;
+  user?: any;
+  tokens?: {
+    accessToken: string;
+    refreshToken: string;
+  };
+}
+
 // Error Types
 export class NeuroWalletError extends Error {
   code: string;
@@ -183,12 +232,23 @@ export class NeuroWalletError extends Error {
 export interface SDKEvents {
   'wallet:created': WalletInfo;
   'wallet:imported': WalletInfo;
+  'wallet:deleted': { address: string };
+  'wallet:updated': WalletInfo;
+  'wallet:social:created': SocialWalletResult;
   'transaction:sent': TransactionResult;
   'transaction:confirmed': TransactionResult;
-  'transaction:failed': TransactionResult;
+  'transaction:failed': { error: string; txId?: string };
   'compliance:flagged': RiskAssessment;
-  'auth:connected': AuthResult;
+  'auth:connected': { address: string };
   'auth:disconnected': void;
+  'auth:login:success': any;
+  'phone:code:sent': { phoneNumber: string };
+  'phone:verified': PhoneVerificationResult;
+  'phone:verification:sent': { phoneNumber: string };
+  'phone:verification:success': PhoneVerificationResult;
+  'phone:verification:failed': { phoneNumber: string; error?: string };
+  'auth:phone:code-sent': PhoneVerificationResult;
+  'auth:phone:verified': PhoneVerificationResult;
   'error': NeuroWalletError;
 }
 

@@ -18,6 +18,13 @@ export { AIAssistant } from './ai';
 
 // Types and interfaces
 export * from './types';
+export type {
+  SocialAuthOptions,
+  GoogleAuthOptions,
+  PhoneAuthOptions,
+  SocialWalletResult,
+  PhoneVerificationResult,
+} from './types';
 
 // Utilities
 export * from './utils/index';

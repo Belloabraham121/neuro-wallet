@@ -326,4 +326,73 @@ export class AuthService {
       tokens,
     };
   }
+
+  /**
+   * Handle phone authentication
+   */
+  static async handlePhoneAuth(
+    phoneNumber: string,
+    ipAddress?: string,
+    userAgent?: string
+  ): Promise<AuthResult> {
+    // Check if social auth mapping exists
+    let socialAuth = await prisma.socialAuthMapping.findUnique({
+      where: {
+        provider_providerId: {
+          provider: 'PHONE',
+          providerId: phoneNumber,
+        },
+      },
+      include: { user: true },
+    });
+
+    let user;
+
+    if (socialAuth) {
+      // User exists with phone auth
+      user = socialAuth.user;
+    } else {
+      // Check if user exists by phone (assuming phone is stored in metadata or separate field)
+      // For now, create new user since we don't have phone field in user model
+      user = await prisma.user.create({
+        data: {
+          email: `${phoneNumber.replace('+', '')}@phone.local`, // Temporary email
+          firstName: null,
+          lastName: null,
+        },
+      });
+      logger.info(`New phone user created: ${phoneNumber}`);
+
+      // Create social auth mapping
+      await prisma.socialAuthMapping.create({
+        data: {
+          provider: 'PHONE',
+          providerId: phoneNumber,
+          providerData: {
+            phoneNumber,
+          },
+          isVerified: true,
+          userId: user.id,
+        },
+      });
+      logger.info(`Phone auth mapping created for user: ${phoneNumber}`);
+    }
+
+    // Generate tokens
+    const tokens = this.generateTokens(user.id);
+
+    // Create session
+    await this.createSession(tokens.refreshToken, user.id, ipAddress, userAgent);
+
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        createdAt: user.createdAt,
+      },
+      tokens,
+    };
+  }
 }

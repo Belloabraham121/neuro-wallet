@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { body } from 'express-validator';
 import { authenticateJWT } from '../middleware/auth';
 import { WalletController } from '../controllers/WalletController';
+import { walletCreationLimiter } from '../middleware/rateLimiter';
 
 const router = Router();
 
@@ -26,7 +27,7 @@ const createSocialWalletPhoneValidation = [
 ];
 
 // Create a new wallet
-router.post('/', authenticateJWT, createWalletValidation, WalletController.createWallet);
+router.post('/', authenticateJWT, walletCreationLimiter, createWalletValidation, WalletController.createWallet);
 
 // Get all wallets for authenticated user
 router.get('/', authenticateJWT, WalletController.getUserWallets);
@@ -41,8 +42,8 @@ router.put('/:id', authenticateJWT, WalletController.updateWallet);
 router.delete('/:id', authenticateJWT, WalletController.deleteWallet);
 
 // Social wallet routes
-router.post('/social/google', createSocialWalletGoogleValidation, WalletController.createSocialWalletGoogle);
+router.post('/social/google', walletCreationLimiter, createSocialWalletGoogleValidation, WalletController.createSocialWalletGoogle);
 
-router.post('/social/phone', createSocialWalletPhoneValidation, WalletController.createSocialWalletPhone);
+router.post('/social/phone', walletCreationLimiter, createSocialWalletPhoneValidation, WalletController.createSocialWalletPhone);
 
 export default router;

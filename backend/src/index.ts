@@ -14,6 +14,8 @@ import { logger } from "./config/logger";
 import errorHandler from "./middleware/errorHandler";
 import notFoundHandler from "./middleware/notFoundHandler";
 import requestLogger from "./middleware/requestLogger";
+import { generalLimiter } from "./middleware/rateLimiter";
+import { sanitizeInput, securityHeaders, requestSizeLimiter } from "./middleware/security";
 import routes from "./routes";
 
 // Import passport configuration
@@ -50,6 +52,12 @@ app.use(
   })
 );
 
+// Additional security headers
+app.use(securityHeaders);
+
+// Request size limiting
+app.use(requestSizeLimiter('10mb'));
+
 // CORS configuration
 app.use(cors(corsConfig));
 
@@ -74,8 +82,13 @@ if (process.env.NODE_ENV === "development") {
 // Custom request logging
 app.use(requestLogger);
 
-// Rate limiting - disabled for development to avoid proxy conflicts
-// app.use(rateLimitConfig);
+// Input sanitization
+app.use(sanitizeInput);
+
+// Rate limiting
+if (process.env.NODE_ENV === 'production') {
+  app.use(generalLimiter);
+}
 
 // Initialize Passport
 app.use(passport.initialize());

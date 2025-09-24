@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { body } from 'express-validator';
 import { authenticateJWT } from '../middleware/auth';
+import { authLimiter, phoneVerificationLimiter } from '../middleware/rateLimiter';
 import passport from 'passport';
 import { AuthController } from '../controllers/AuthController';
 
@@ -20,10 +21,10 @@ const loginValidation = [
 ];
 
 // Register with email and password
-router.post('/register', registerValidation, AuthController.register);
+router.post('/register', authLimiter, registerValidation, AuthController.register);
 
 // Login with email and password
-router.post('/login', loginValidation, AuthController.login);
+router.post('/login', authLimiter, loginValidation, AuthController.login);
 
 // Google OAuth routes
 router.get('/google',
@@ -39,6 +40,21 @@ router.get('/google/callback',
 
 // Refresh token
 router.post('/refresh', AuthController.refreshToken);
+
+// Phone authentication routes
+router.post('/phone/send-code', phoneVerificationLimiter, [
+  body('phoneNumber').isMobilePhone('any').withMessage('Valid phone number is required'),
+], AuthController.sendPhoneVerificationCode);
+
+router.post('/phone/verify', authLimiter, [
+  body('phoneNumber').isMobilePhone('any').withMessage('Valid phone number is required'),
+  body('verificationCode').isLength({ min: 4, max: 8 }).withMessage('Valid verification code is required'),
+], AuthController.verifyPhoneNumber);
+
+router.post('/phone/login', authLimiter, [
+  body('phoneNumber').isMobilePhone('any').withMessage('Valid phone number is required'),
+  body('verificationCode').isLength({ min: 4, max: 8 }).withMessage('Valid verification code is required'),
+], AuthController.phoneLogin);
 
 // Logout
 router.post('/logout', authenticateJWT, AuthController.logout);
