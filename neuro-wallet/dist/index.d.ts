@@ -417,6 +417,7 @@ declare class NeuroWalletClient extends EventEmitter<SDKEvents> {
     readonly analytics: AnalyticsManager;
     readonly ai: AIAssistant;
     constructor(config: NeuroWalletConfig);
+    readonly api: any;
     /**
      * Get the current configuration
      */

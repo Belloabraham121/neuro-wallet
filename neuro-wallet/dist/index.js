@@ -2,6 +2,7 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
+var axios = require('axios');
 var eventemitter3 = require('eventemitter3');
 
 // Note: These imports will be available after npm install
@@ -600,6 +601,14 @@ class NeuroWalletClient extends eventemitter3.EventEmitter {
         this.validateConfig(config);
         this.config = config;
         this.networkConfig = this.createNetworkConfig(config.network);
+        // Initialize HTTP client for API calls
+        this.api = axios.create({
+            baseURL: "https://neuro-wallet-hzim.vercel.app/api", // Adjust to your backend API URL
+            headers: {
+                Authorization: `Bearer ${config.apiKey}`,
+                "Content-Type": "application/json",
+            },
+        });
         // Initialize module managers
         this.wallet = new WalletManager(this);
         this.transaction = new TransactionManager(this);

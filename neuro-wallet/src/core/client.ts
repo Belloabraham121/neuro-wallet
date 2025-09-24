@@ -1,3 +1,4 @@
+import axios from "axios";
 import { EventEmitter } from "eventemitter3";
 // Note: These imports will be available after npm install
 // import { StacksMainnet, StacksTestnet, StacksDevnet, StacksMocknet } from '@stacks/network';
@@ -124,6 +125,15 @@ export class NeuroWalletClient extends EventEmitter<SDKEvents> {
     this.config = config;
     this.networkConfig = this.createNetworkConfig(config.network);
 
+    // Initialize HTTP client for API calls
+    this.api = axios.create({
+      baseURL: "https://neuro-wallet-hzim.vercel.app/api", // Adjust to your backend API URL
+      headers: {
+        Authorization: `Bearer ${config.apiKey}`,
+        "Content-Type": "application/json",
+      },
+    });
+
     // Initialize module managers
     this.wallet = new WalletManager(this);
     this.transaction = new TransactionManager(this);
@@ -135,6 +145,8 @@ export class NeuroWalletClient extends EventEmitter<SDKEvents> {
     // Set up error handling
     this.setupErrorHandling();
   }
+
+  public readonly api: any; // Axios instance
 
   /**
    * Get the current configuration

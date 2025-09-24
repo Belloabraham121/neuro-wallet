@@ -1,0 +1,24 @@
+{
+  "name": "example",
+  "version": "1.0.0",
+  "main": "wallet.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "start": "node dist/wallet.js",
+    "dev": "npm run build && node dist/wallet.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "Example usage of Neuro Stacks SDK",
+  "dependencies": {
+    "neuro-stacks-sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.0.0"
+  }
+}

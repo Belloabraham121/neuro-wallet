@@ -1,5 +1,5 @@
 {
-  "name": "@neuro-wallet/sdk",
+  "name": "neuro-stacks-sdk",
   "version": "1.0.0",
   "description": "AI-Powered Onchain SDK for Wallets, Gasless Transactions & Compliance with HIRO Stacks.js integration",
   "main": "dist/index.js",
