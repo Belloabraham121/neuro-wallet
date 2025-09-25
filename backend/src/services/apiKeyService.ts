@@ -321,15 +321,13 @@ export class ApiKeyService {
     apiKeyId: string,
     endpoint: string,
     method: string,
-    userId: string,
+    userId: string | null,
     status: string,
-    ipAddress: string,
-    userAgent: string,
-    responseTime: number
+    ipAddress?: string,
+    userAgent?: string,
+    responseTime?: number
   ): Promise<void> {
     try {
-      // TODO: Uncomment when ApiKeyUsage model is added to Prisma schema
-      /*
       await prisma.apiKeyUsage.create({
         data: {
           apiKeyId,
@@ -342,7 +340,12 @@ export class ApiKeyService {
           responseTime,
         },
       });
-      */
+
+      // Increment usage count
+      await prisma.apiKey.update({
+        where: { id: apiKeyId },
+        data: { usageCount: { increment: 1 } },
+      });
 
       logger.info(`API key usage logged: ${apiKeyId} for endpoint ${endpoint}`);
     } catch (error) {
