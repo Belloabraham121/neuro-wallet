@@ -23,6 +23,7 @@ declare module "express-serve-static-core" {
   interface Request {
     user?: AuthUser;
     apiKey?: AuthApiKey;
+    apiKeyId?: string;
   }
 }
 
@@ -166,6 +167,7 @@ export const authenticateAPIKey = async (
 
     req.user = result.data.user;
     req.apiKey = result.data.apiKey;
+    req.apiKeyId = result.data.apiKey.id;
     next();
   } catch (error) {
     logger.error("API key authentication error:", error);

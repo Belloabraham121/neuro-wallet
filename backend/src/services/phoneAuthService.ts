@@ -135,8 +135,11 @@ export class PhoneAuthService {
         },
       });
 
-      // Send SMS via Twilio
-      await this.sendSMS(phoneNumber, `Your Neuro Wallet verification code is: ${verificationCode}`);
+      // For testing: Log the verification code
+      logger.info(`Test verification code for ${phoneNumber}: ${verificationCode}`);
+
+      // Send SMS via Twilio (commented for testing)
+      // await this.sendSMS(phoneNumber, `Your Neuro Wallet verification code is: ${verificationCode}`);
 
       return {
         success: true,

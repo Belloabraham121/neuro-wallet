@@ -2,6 +2,8 @@ import crypto from "crypto";
 import { prisma } from "../index";
 import { logger } from "../config/logger";
 import { PhoneAuthService } from "./phoneAuthService";
+import { ApiKeyService } from "./apiKeyService";
+
 import {
   getAddressFromPublicKey,
   TransactionVersion,
@@ -172,8 +174,13 @@ export class WalletService {
   /**
    * Create a new wallet
    */
-  static async createWallet(data: CreateWalletData): Promise<WalletResponse> {
-    const { userId, walletType = "STANDARD", metadata = {} } = data;
+  static async createWallet(data: {
+    userId: string;
+    apiKeyId?: string;
+    walletType?: "STANDARD" | "SOCIAL_GOOGLE" | "SOCIAL_PHONE" | "MULTISIG";
+    metadata?: Record<string, any>;
+  }): Promise<WalletResponse> {
+    const { userId, apiKeyId, walletType = "STANDARD", metadata = {} } = data;
 
     // Check if user has reached wallet limit
     const existingWalletsCount = await prisma.wallet.count({
@@ -206,6 +213,16 @@ export class WalletService {
 
     logger.info(`Wallet created: ${wallet.id} for user: ${userId}`);
 
+    if (apiKeyId) {
+      await ApiKeyService.logApiKeyUsage(
+        apiKeyId,
+        '/api/wallets',
+        'POST',
+        userId,
+        'success'
+      );
+    }
+
     return {
       id: wallet.id,
       address: wallet.address,
@@ -221,7 +238,12 @@ export class WalletService {
    * Create social wallet with Google authentication
    */
   static async createSocialWalletGoogle(
-    socialData: SocialWalletData
+    socialData: {
+      provider: string;
+      providerId: string;
+      providerData?: Record<string, any>;
+      apiKeyId?: string;
+    }
   ): Promise<WalletResponse> {
     const { provider, providerId, providerData = {} } = socialData;
 
@@ -297,6 +319,17 @@ export class WalletService {
       },
     });
 
+    // Log API key usage
+    if (socialData.apiKeyId) {
+      await ApiKeyService.logApiKeyUsage(
+        socialData.apiKeyId,
+        '/api/wallets/social/google',
+        'POST',
+        user.id,
+        'success'
+      );
+    }
+
     logger.info(
       `Social wallet created: ${wallet.id} for provider: ${provider}`
     );
@@ -316,7 +349,13 @@ export class WalletService {
    * Create social wallet with phone authentication
    */
   static async createSocialWalletPhone(
-    socialData: SocialWalletData
+    socialData: {
+      provider: string;
+      providerId: string;
+      verificationCode?: string;
+      providerData?: Record<string, any>;
+      apiKeyId?: string;
+    }
   ): Promise<WalletResponse> {
     const {
       provider,
@@ -406,6 +445,17 @@ export class WalletService {
         isVerified: true,
       },
     });
+
+    // Log API key usage
+    if (socialData.apiKeyId) {
+      await ApiKeyService.logApiKeyUsage(
+        socialData.apiKeyId,
+        '/api/wallets/social/phone',
+        'POST',
+        user.id,
+        'success'
+      );
+    }
 
     logger.info(`Social wallet created: ${wallet.id} for phone: ${providerId}`);
 
