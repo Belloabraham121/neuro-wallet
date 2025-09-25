@@ -1,7 +1,7 @@
-import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import { prisma } from '../index';
-import { logger } from '../config/logger';
+import { Request, Response, NextFunction } from "express";
+import jwt from "jsonwebtoken";
+import { prisma } from "../index";
+import { logger } from "../config/logger";
 
 interface AuthUser {
   id: string;
@@ -19,7 +19,7 @@ interface AuthApiKey {
 }
 
 // Extend Request interface to include user
-declare module 'express-serve-static-core' {
+declare module "express-serve-static-core" {
   interface Request {
     user?: AuthUser;
     apiKey?: AuthApiKey;
@@ -27,35 +27,39 @@ declare module 'express-serve-static-core' {
 }
 
 // JWT Authentication middleware
-export const authenticateJWT = async (req: Request, res: Response, next: NextFunction): Promise<void | Response> => {
+export const authenticateJWT = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void | Response> => {
   try {
     const authHeader = req.headers.authorization;
-    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+    const token = authHeader && authHeader.split(" ")[1]; // Bearer TOKEN
 
     if (!token) {
       return res.status(401).json({
         success: false,
         error: {
-          message: 'Access token is required',
-          code: 'TOKEN_REQUIRED',
+          message: "Access token is required",
+          code: "TOKEN_REQUIRED",
         },
       });
     }
 
     const jwtSecret = process.env.JWT_SECRET as string;
     if (!jwtSecret) {
-      logger.error('JWT_SECRET is not configured');
+      logger.error("JWT_SECRET is not configured");
       return res.status(500).json({
         success: false,
         error: {
-          message: 'Server configuration error',
-          code: 'SERVER_ERROR',
+          message: "Server configuration error",
+          code: "SERVER_ERROR",
         },
       });
     }
 
     const decoded = jwt.verify(token, jwtSecret) as any;
-    
+
     // Fetch user from database to ensure they still exist and are active
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
@@ -72,8 +76,8 @@ export const authenticateJWT = async (req: Request, res: Response, next: NextFun
       return res.status(401).json({
         success: false,
         error: {
-          message: 'User not found',
-          code: 'USER_NOT_FOUND',
+          message: "User not found",
+          code: "USER_NOT_FOUND",
         },
       });
     }
@@ -82,8 +86,8 @@ export const authenticateJWT = async (req: Request, res: Response, next: NextFun
       return res.status(401).json({
         success: false,
         error: {
-          message: 'User account is deactivated',
-          code: 'USER_DEACTIVATED',
+          message: "User account is deactivated",
+          code: "USER_DEACTIVATED",
         },
       });
     }
@@ -95,8 +99,8 @@ export const authenticateJWT = async (req: Request, res: Response, next: NextFun
       return res.status(401).json({
         success: false,
         error: {
-          message: 'Invalid token',
-          code: 'INVALID_TOKEN',
+          message: "Invalid token",
+          code: "INVALID_TOKEN",
         },
       });
     }
@@ -105,48 +109,56 @@ export const authenticateJWT = async (req: Request, res: Response, next: NextFun
       return res.status(401).json({
         success: false,
         error: {
-          message: 'Token has expired',
-          code: 'TOKEN_EXPIRED',
+          message: "Token has expired",
+          code: "TOKEN_EXPIRED",
         },
       });
     }
 
-    logger.error('JWT authentication error:', error);
+    logger.error("JWT authentication error:", error);
     return res.status(500).json({
       success: false,
       error: {
-        message: 'Authentication failed',
-        code: 'AUTH_ERROR',
+        message: "Authentication failed",
+        code: "AUTH_ERROR",
       },
     });
   }
 };
 
 // API Key Authentication middleware
-export const authenticateAPIKey = async (req: Request, res: Response, next: NextFunction): Promise<void | Response> => {
+export const authenticateAPIKey = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void | Response> => {
   try {
-    const apiKey = req.headers['x-api-key'] as string;
+    const apiKey = req.headers["x-api-key"] as string;
 
     if (!apiKey) {
       return res.status(401).json({
         success: false,
         error: {
-          message: 'API key is required',
-          code: 'API_KEY_REQUIRED',
+          message: "API key is required",
+          code: "API_KEY_REQUIRED",
         },
       });
     }
 
     // Validate API key using internal validation endpoint
-    const response = await fetch(`${process.env.BASE_URL || 'http://localhost:3000'}/api/keys/validate`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ apiKey }),
-    });
+    const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 3001}`;
+    const response = await fetch(
+      `${baseUrl}/api/keys/validate`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ apiKey }),
+      }
+    );
 
-    const result = await response.json() as any;
+    const result = (await response.json()) as any;
 
     if (!result.success) {
       return res.status(401).json(result);
@@ -156,22 +168,26 @@ export const authenticateAPIKey = async (req: Request, res: Response, next: Next
     req.apiKey = result.data.apiKey;
     next();
   } catch (error) {
-    logger.error('API key authentication error:', error);
+    logger.error("API key authentication error:", error);
     return res.status(500).json({
       success: false,
       error: {
-        message: 'Authentication failed',
-        code: 'AUTH_ERROR',
+        message: "Authentication failed",
+        code: "AUTH_ERROR",
       },
     });
   }
 };
 
 // Optional JWT Authentication (doesn't fail if no token)
-export const optionalJWT = async (req: Request, res: Response, next: NextFunction) => {
+export const optionalJWT = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const authHeader = req.headers.authorization;
-    const token = authHeader && authHeader.split(' ')[1];
+    const token = authHeader && authHeader.split(" ")[1];
 
     if (!token) {
       return next(); // Continue without authentication
@@ -183,7 +199,7 @@ export const optionalJWT = async (req: Request, res: Response, next: NextFunctio
     }
 
     const decoded = jwt.verify(token, jwtSecret) as any;
-    
+
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
       select: {
@@ -207,27 +223,33 @@ export const optionalJWT = async (req: Request, res: Response, next: NextFunctio
 };
 
 // Admin role check middleware (use after JWT authentication)
-export const requireAdmin = (req: Request, res: Response, next: NextFunction): void | Response => {
+export const requireAdmin = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void | Response => {
   if (!req.user) {
     return res.status(401).json({
       success: false,
       error: {
-        message: 'Authentication required',
-        code: 'AUTH_REQUIRED',
+        message: "Authentication required",
+        code: "AUTH_REQUIRED",
       },
     });
   }
 
   // Check if user has admin role (you might need to add role field to User model)
   // For now, we'll check if user email is in admin list from environment
-  const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(email => email.trim());
-  
+  const adminEmails = (process.env.ADMIN_EMAILS || "")
+    .split(",")
+    .map((email) => email.trim());
+
   if (!adminEmails.includes(req.user.email)) {
     return res.status(403).json({
       success: false,
       error: {
-        message: 'Admin access required',
-        code: 'ADMIN_REQUIRED',
+        message: "Admin access required",
+        code: "ADMIN_REQUIRED",
       },
     });
   }
@@ -236,14 +258,18 @@ export const requireAdmin = (req: Request, res: Response, next: NextFunction): v
 };
 
 // Rate limiting check for API keys
-export const checkAPIKeyRateLimit = async (req: Request, res: Response, next: NextFunction) => {
+export const checkAPIKeyRateLimit = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     if (!req.apiKey) {
       return next(); // Skip if no API key
     }
 
     const { rateLimit } = req.apiKey;
-    
+
     if (!rateLimit) {
       return next(); // No rate limit set
     }
@@ -252,12 +278,12 @@ export const checkAPIKeyRateLimit = async (req: Request, res: Response, next: Ne
     // This is a basic implementation - you should use a proper rate limiting solution
     const now = Date.now();
     const windowMs = 60 * 1000; // 1 minute window
-    
+
     // You would implement proper rate limiting logic here
     // For now, we'll just continue
     next();
   } catch (error) {
-    logger.error('Rate limit check error:', error);
+    logger.error("Rate limit check error:", error);
     next();
   }
 };
