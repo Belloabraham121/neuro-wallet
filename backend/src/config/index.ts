@@ -12,7 +12,9 @@ if (missingEnvVars.length > 0) {
   console.error("Missing required environment variables:", missingEnvVars);
   // In serverless environments, throw an error instead of exiting
   if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
-    throw new Error(`Missing required environment variables: ${missingEnvVars.join(", ")}`);
+    throw new Error(
+      `Missing required environment variables: ${missingEnvVars.join(", ")}`
+    );
   } else {
     process.exit(1);
   }
@@ -23,7 +25,8 @@ export const config = {
   port: parseInt(process.env.PORT || "3000"),
   nodeEnv: process.env.NODE_ENV || "development",
   apiVersion: process.env.API_VERSION || "1.0.0",
-  baseUrl: process.env.BASE_URL || "http://localhost:3000",
+  baseUrl:
+    process.env.BASE_URL || `http://localhost:${process.env.PORT || 3001}`,
 
   // Database
   databaseUrl: process.env.DATABASE_URL!,

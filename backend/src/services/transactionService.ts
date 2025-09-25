@@ -94,7 +94,7 @@ export class TransactionService {
         data: {
           txId: null,
           type: "STX_TRANSFER" as TransactionType,
-          recipient: toAddress,
+          toAddress: toAddress, // Changed from 'recipient' to 'toAddress'
           amount: amountMicro,
           status: TransactionStatus.PENDING,
           walletId: fromWalletId,
@@ -129,7 +129,7 @@ export class TransactionService {
         txId,
         type: dbTransaction.type,
         fromAddress: wallet.address,
-        toAddress: dbTransaction.recipient,
+        toAddress: dbTransaction.toAddress, // Changed from recipient
         amount: dbTransaction.amount,
         status: dbTransaction.status,
         memo: undefined,
@@ -184,7 +184,7 @@ export class TransactionService {
       fromWalletId: tx.walletId,
       txId: tx.txId,
       fromAddress: tx.wallet.address,
-      toAddress: tx.recipient,
+      toAddress: tx.toAddress, // Changed from tx.recipient
       amount: tx.amount,
       type: tx.type,
       status: tx.status,
@@ -284,7 +284,7 @@ export class TransactionService {
       fromWalletId: transaction.walletId,
       txId: transaction.txId,
       fromAddress: transaction.wallet.address,
-      toAddress: transaction.recipient,
+      toAddress: transaction.toAddress, // Changed from transaction.recipient
       amount: transaction.amount,
       type: transaction.type,
       status: transaction.status,
