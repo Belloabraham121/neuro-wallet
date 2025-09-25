@@ -19,6 +19,8 @@ const logger_1 = require("./config/logger");
 const errorHandler_1 = __importDefault(require("./middleware/errorHandler"));
 const notFoundHandler_1 = __importDefault(require("./middleware/notFoundHandler"));
 const requestLogger_1 = __importDefault(require("./middleware/requestLogger"));
+const rateLimiter_1 = require("./middleware/rateLimiter");
+const security_1 = require("./middleware/security");
 const routes_1 = __importDefault(require("./routes"));
 require("./config/passport");
 dotenv_1.default.config();
@@ -41,6 +43,8 @@ app.use((0, helmet_1.default)({
         },
     },
 }));
+app.use(security_1.securityHeaders);
+app.use((0, security_1.requestSizeLimiter)('10mb'));
 app.use((0, cors_1.default)(cors_2.default));
 app.use((0, compression_1.default)());
 app.use(express_1.default.json({ limit: "10mb" }));
@@ -54,6 +58,10 @@ else {
     }));
 }
 app.use(requestLogger_1.default);
+app.use(security_1.sanitizeInput);
+if (process.env.NODE_ENV === 'production') {
+    app.use(rateLimiter_1.generalLimiter);
+}
 app.use(passport_1.default.initialize());
 app.get("/health", (req, res) => {
     res.status(200).json({

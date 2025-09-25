@@ -2,9 +2,14 @@ import crypto from "crypto";
 import { prisma } from "../index";
 import { logger } from "../config/logger";
 import { PhoneAuthService } from "./phoneAuthService";
+import {
+  getAddressFromPublicKey,
+  TransactionVersion,
+} from "@stacks/transactions";
 
 export interface CreateWalletData {
   userId: string;
+  apiKeyId?: string;
   walletType?: "STANDARD" | "SOCIAL_GOOGLE" | "SOCIAL_PHONE" | "MULTISIG";
   metadata?: Record<string, any>;
 }
@@ -14,6 +19,7 @@ export interface SocialWalletData {
   providerId: string;
   providerData?: Record<string, any>;
   verificationCode?: string;
+  apiKeyId: string;
 }
 
 export interface WalletResponse {
@@ -73,6 +79,46 @@ export class WalletService {
     return decrypted;
   }
 
+  static doubleSHA256(data: Buffer): Buffer {
+    let hash = crypto.createHash("sha256").update(data).digest();
+    return crypto.createHash("sha256").update(hash).digest();
+  }
+
+  static hash160(data: Buffer): Buffer {
+    const sha = crypto.createHash("sha256").update(data).digest();
+    return crypto.createHash("ripemd160").update(sha).digest();
+  }
+
+  static c32encode(inputBytes: Buffer): string {
+    const chars = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+    let value = BigInt(0);
+    for (const byte of inputBytes) {
+      value = value * BigInt(256) + BigInt(byte);
+    }
+    let encoded = "";
+    if (value === BigInt(0)) {
+      return chars[0];
+    }
+    while (value > BigInt(0)) {
+      const remainder = Number(value % BigInt(32));
+      encoded = chars[remainder] + encoded;
+      value = value / BigInt(32);
+    }
+    let zeroCount = 0;
+    for (const byte of inputBytes) {
+      if (byte !== 0) break;
+      zeroCount++;
+    }
+    const zeroChars = Math.ceil((zeroCount * 8) / 5);
+    encoded = chars[0].repeat(zeroChars) + encoded;
+    return encoded;
+  }
+
+  static getAddress(pubkeyHex: string): string {
+    const publicKeyBytes = new Uint8Array(Buffer.from(pubkeyHex, "hex"));
+    return getAddressFromPublicKey(publicKeyBytes, TransactionVersion.Testnet);
+  }
+
   /**
    * Generate deterministic wallet keys for social authentication
    */
@@ -82,36 +128,39 @@ export class WalletService {
     userSalt?: string
   ): WalletKeys {
     // Create deterministic seed from provider data
-    const seedData = `${provider}:${providerId}:${userSalt || process.env.WALLET_SEED_SALT || 'default-salt'}`;
-    const seed = crypto.createHash('sha256').update(seedData).digest();
-    
+    const seedData = `${provider}:${providerId}:${
+      userSalt || process.env.WALLET_SEED_SALT || "default-salt"
+    }`;
+    const seed = crypto.createHash("sha256").update(seedData).digest();
+
     // Generate deterministic private key
-    const privateKey = crypto.createHash('sha256').update(seed).digest('hex');
-    
-    // In a real implementation, you would use proper Stacks key generation
-    // This is a simplified version for demonstration
-    const publicKeyHash = crypto.createHash('sha256').update(privateKey + 'public').digest();
-    const publicKey = publicKeyHash.toString('hex').substring(0, 66); // 33 bytes * 2
-    
-    const addressHash = crypto.createHash('ripemd160').update(publicKeyHash).digest();
-    const address = addressHash.toString('hex').substring(0, 38); // 19 bytes * 2
+    const privateKey = crypto.createHash("sha256").update(seed).digest("hex");
+
+    const privBuf = Buffer.from(privateKey, "hex");
+    const ecdh = crypto.createECDH("secp256k1");
+    ecdh.setPrivateKey(privBuf);
+    const pubBuf = ecdh.getPublicKey(null, "compressed");
+    const publicKey = pubBuf.toString("hex");
+    const address = WalletService.getAddress(publicKey);
 
     return {
-      address: `ST${address.toUpperCase()}`,
+      address,
       publicKey,
       privateKey,
     };
   }
 
   /**
-   * Generate random wallet keys for standard wallets (simplified - in production use proper Stacks key generation)
+   * Generate random wallet keys for standard wallets
    */
   static generateWalletKeys(): WalletKeys {
-    // This is a simplified implementation
-    // In production, use proper Stacks key generation libraries
-    const privateKey = crypto.randomBytes(32).toString("hex");
-    const publicKey = crypto.randomBytes(33).toString("hex");
-    const address = "ST" + crypto.randomBytes(19).toString("hex").toUpperCase();
+    const privateKeyBuf = crypto.randomBytes(32);
+    const privateKey = privateKeyBuf.toString("hex");
+    const ecdh = crypto.createECDH("secp256k1");
+    ecdh.setPrivateKey(privateKeyBuf);
+    const pubBuf = ecdh.getPublicKey(null, "compressed");
+    const publicKey = pubBuf.toString("hex");
+    const address = WalletService.getAddress(publicKey);
 
     return {
       address,
@@ -291,11 +340,11 @@ export class WalletService {
       const result = await PhoneAuthService.sendVerificationCode({
         phoneNumber: providerId,
       });
-      
+
       if (!result.success) {
         throw new Error(result.message);
       }
-      
+
       throw new Error("VERIFICATION_CODE_SENT");
     }
 

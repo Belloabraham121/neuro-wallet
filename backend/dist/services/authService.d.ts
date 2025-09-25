@@ -43,5 +43,6 @@ export declare class AuthService {
     static refreshToken(refreshToken: string): Promise<TokenPair>;
     static logoutUser(refreshToken: string): Promise<void>;
     static handleGoogleAuth(googleProfile: any, ipAddress?: string, userAgent?: string): Promise<AuthResult>;
+    static handlePhoneAuth(phoneNumber: string, ipAddress?: string, userAgent?: string): Promise<AuthResult>;
 }
 //# sourceMappingURL=authService.d.ts.map

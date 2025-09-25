@@ -19,6 +19,7 @@ class WalletController {
             }
             const { walletType, metadata } = req.body;
             const userId = req.user?.id;
+            const apiKeyId = req.apiKey?.id;
             if (!userId) {
                 return res.status(401).json({
                     success: false,
@@ -28,10 +29,20 @@ class WalletController {
                     },
                 });
             }
+            if (!apiKeyId) {
+                return res.status(401).json({
+                    success: false,
+                    error: {
+                        message: 'API key not authenticated',
+                        code: 'API_KEY_UNAUTHORIZED',
+                    },
+                });
+            }
             const wallet = await walletService_1.WalletService.createWallet({
                 userId,
                 walletType,
                 metadata,
+                apiKeyId,
             });
             res.status(201).json({
                 success: true,
@@ -65,10 +76,21 @@ class WalletController {
                 });
             }
             const { provider, providerId, providerData } = req.body;
+            const apiKeyId = req.apiKey?.id;
+            if (!apiKeyId) {
+                return res.status(401).json({
+                    success: false,
+                    error: {
+                        message: 'API key not authenticated',
+                        code: 'API_KEY_UNAUTHORIZED',
+                    },
+                });
+            }
             const wallet = await walletService_1.WalletService.createSocialWalletGoogle({
                 provider,
                 providerId,
                 providerData,
+                apiKeyId,
             });
             res.status(201).json({
                 success: true,
@@ -120,11 +142,22 @@ class WalletController {
                 });
             }
             const { provider, providerId, verificationCode, providerData } = req.body;
+            const apiKeyId = req.apiKey?.id;
+            if (!apiKeyId) {
+                return res.status(401).json({
+                    success: false,
+                    error: {
+                        message: 'API key not authenticated',
+                        code: 'API_KEY_UNAUTHORIZED',
+                    },
+                });
+            }
             const wallet = await walletService_1.WalletService.createSocialWalletPhone({
                 provider,
                 providerId,
                 verificationCode,
                 providerData,
+                apiKeyId,
             });
             res.status(201).json({
                 success: true,

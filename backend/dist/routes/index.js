@@ -7,6 +7,7 @@ const express_1 = __importDefault(require("express"));
 const auth_1 = __importDefault(require("./auth"));
 const apiKeys_1 = __importDefault(require("./apiKeys"));
 const wallets_1 = __importDefault(require("./wallets"));
+const transactions_1 = __importDefault(require("./transactions"));
 const router = express_1.default.Router();
 router.get("/health", (req, res) => {
     res.json({
@@ -19,5 +20,6 @@ router.get("/health", (req, res) => {
 router.use("/auth", auth_1.default);
 router.use("/keys", apiKeys_1.default);
 router.use("/wallets", wallets_1.default);
+router.use("/transactions", transactions_1.default);
 exports.default = router;
 //# sourceMappingURL=index.js.map

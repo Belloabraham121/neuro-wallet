@@ -2,6 +2,7 @@ import express from "express";
 import authRoutes from "./auth";
 import apiKeyRoutes from "./apiKeys";
 import walletRoutes from "./wallets";
+import transactionRoutes from "./transactions";
 
 const router = express.Router();
 
@@ -19,5 +20,6 @@ router.get("/health", (req, res) => {
 router.use("/auth", authRoutes);
 router.use("/keys", apiKeyRoutes);
 router.use("/wallets", walletRoutes);
+router.use("/transactions", transactionRoutes);
 
 export default router;

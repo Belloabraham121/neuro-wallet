@@ -205,6 +205,111 @@ class ApiKeyService {
         }
         return permissions[requiredPermission] === true;
     }
+    static async logApiKeyUsage(apiKeyId, endpoint, method, userId, status, ipAddress, userAgent, responseTime) {
+        try {
+            await index_1.prisma.apiKeyUsage.create({
+                data: {
+                    apiKeyId,
+                    endpoint,
+                    method,
+                    userId,
+                    status,
+                    ipAddress,
+                    userAgent,
+                    responseTime,
+                },
+            });
+            logger_1.logger.info(`API key usage logged: ${apiKeyId} for endpoint ${endpoint}`);
+        }
+        catch (error) {
+            logger_1.logger.error(`Failed to log API key usage: ${error}`);
+        }
+    }
+    static async getApiKeyUsages(apiKeyId, userId, limit = 100, startDate, endDate) {
+        const whereClause = {
+            apiKeyId,
+            apiKey: {
+                userId,
+            },
+        };
+        if (startDate) {
+            whereClause.createdAt = { ...whereClause.createdAt, gte: startDate };
+        }
+        if (endDate) {
+            whereClause.createdAt = { ...whereClause.createdAt, lte: endDate };
+        }
+        const usages = await index_1.prisma.apiKeyUsage.findMany({
+            where: whereClause,
+            include: {
+                apiKey: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+                user: {
+                    select: {
+                        id: true,
+                        email: true,
+                    },
+                },
+            },
+            orderBy: {
+                createdAt: 'desc',
+            },
+            take: limit,
+        });
+        return usages;
+    }
+    static async getApiKeyUsageStats(apiKeyId, userId, days = 30) {
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - days);
+        const [totalRequests, successCount, errorCount, avgResponseTime] = await Promise.all([
+            index_1.prisma.apiKeyUsage.count({
+                where: {
+                    apiKeyId,
+                    apiKey: { userId },
+                    createdAt: { gte: startDate },
+                },
+            }),
+            index_1.prisma.apiKeyUsage.count({
+                where: {
+                    apiKeyId,
+                    apiKey: { userId },
+                    createdAt: { gte: startDate },
+                    status: 'success',
+                },
+            }),
+            index_1.prisma.apiKeyUsage.count({
+                where: {
+                    apiKeyId,
+                    apiKey: { userId },
+                    createdAt: { gte: startDate },
+                    status: 'error',
+                },
+            }),
+            index_1.prisma.apiKeyUsage.aggregate({
+                where: {
+                    apiKeyId,
+                    apiKey: { userId },
+                    createdAt: { gte: startDate },
+                    status: 'success',
+                },
+                _avg: {
+                    responseTime: true,
+                },
+            }),
+        ]);
+        return {
+            apiKeyId,
+            periodDays: days,
+            totalRequests,
+            successRate: totalRequests > 0 ? (successCount / totalRequests) * 100 : 0,
+            errorRate: totalRequests > 0 ? (errorCount / totalRequests) * 100 : 0,
+            avgResponseTime: avgResponseTime._avg.responseTime || 0,
+        };
+    }
 }
 exports.ApiKeyService = ApiKeyService;
+exports.default = ApiKeyService;
 //# sourceMappingURL=apiKeyService.js.map

@@ -1,6 +1,7 @@
 import { prisma } from '../index';
 import { logger } from '../config/logger';
 import crypto from 'crypto';
+import twilio from 'twilio';
 
 export interface PhoneVerificationData {
   phoneNumber: string;
@@ -47,6 +48,29 @@ export class PhoneAuthService {
     // E.164 format: +[country code][number]
     const phoneRegex = /^\+[1-9]\d{1,14}$/;
     return phoneRegex.test(phoneNumber);
+  }
+
+  /**
+   * Send SMS via Twilio
+   */
+  private static async sendSMS(phoneNumber: string, message: string): Promise<void> {
+    if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN || !process.env.TWILIO_PHONE_NUMBER) {
+      throw new Error('Twilio configuration missing');
+    }
+
+    const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+
+    try {
+      await client.messages.create({
+        body: message,
+        from: process.env.TWILIO_PHONE_NUMBER,
+        to: phoneNumber
+      });
+      logger.info(`SMS sent successfully to ${phoneNumber}`);
+    } catch (error) {
+      logger.error(`Failed to send SMS to ${phoneNumber}:`, error);
+      throw new Error('Failed to send verification code via SMS');
+    }
   }
 
   /**
@@ -111,15 +135,8 @@ export class PhoneAuthService {
         },
       });
 
-      // In production, integrate with SMS service (Twilio, AWS SNS, etc.)
-      // For development, log the code
-      if (process.env.NODE_ENV === 'development') {
-        logger.info(`Verification code for ${phoneNumber}: ${verificationCode}`);
-      } else {
-        // TODO: Integrate with SMS service
-        // await this.sendSMS(phoneNumber, `Your verification code is: ${verificationCode}`);
-        logger.info(`SMS sent to ${phoneNumber}`);
-      }
+      // Send SMS via Twilio
+      await this.sendSMS(phoneNumber, `Your Neuro Wallet verification code is: ${verificationCode}`);
 
       return {
         success: true,

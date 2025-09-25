@@ -25,6 +25,9 @@ model User {
   wallets           Wallet[]
   socialAuthMappings SocialAuthMapping[]
   sessions          Session[]
+  usages            ApiKeyUsage[]
+  apiKeyId          String?
+  apiKey            ApiKey? @relation("SubUsers", fields: [apiKeyId], references: [id])
 
   @@map("users")
 }
@@ -44,6 +47,9 @@ model ApiKey {
   // Relations
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subUsers User[] @relation("SubUsers")
+  wallets Wallet[] @relation("ApiKeyWallets")
+  usages ApiKeyUsage[]
 
   // Usage tracking
   usageCount Int @default(0)
@@ -65,6 +71,8 @@ model Wallet {
   // Relations
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  apiKeyId String?
+  apiKey   ApiKey? @relation("ApiKeyWallets", fields: [apiKeyId], references: [id])
   
   transactions Transaction[]
   socialAuthMappings SocialAuthMapping[]
@@ -118,8 +126,10 @@ model Transaction {
   txId        String?           @unique // Stacks transaction ID
   type        TransactionType
   status      TransactionStatus @default(PENDING)
-  amount      String?           // For STX transfers
-  recipient   String?           // Recipient address
+  fromAddress String?           // Sender address
+  amount      String?           // For STX transfers (microSTX)
+  toAddress   String?           // Recipient address
+  memo        String?           // Optional memo
   contractAddress String?       // For contract calls
   functionName String?          // For contract calls
   functionArgs Json?            // For contract calls
@@ -178,16 +188,18 @@ model Analytics {
 
 // Enums
 enum WalletType {
-  STANDARD
-  SOCIAL_GOOGLE
-  SOCIAL_PHONE
-  MULTISIG
-}
+    STANDARD
+    SOCIAL_GOOGLE
+    SOCIAL_PHONE
+    SOCIAL_TWITTER
+    MULTISIG
+  }
 
 enum AuthProvider {
   GOOGLE
   PHONE
   EMAIL
+  TWITTER
 }
 
 enum TransactionType {
@@ -202,4 +214,23 @@ enum TransactionStatus {
   CONFIRMED
   FAILED
   CANCELLED
+}
+
+model ApiKeyUsage {
+  id           String   @id @default(cuid())
+  apiKeyId     String
+  apiKey       ApiKey   @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+  endpoint     String   // e.g., "/api/wallets"
+  method       String   // "GET", "POST", etc.
+  userId       String?
+  user         User?    @relation(fields: [userId], references: [id])
+  status       String   // "success", "error"
+  ipAddress    String?
+  userAgent    String?
+  responseTime Int?     // in ms
+  createdAt    DateTime @default(now())
+
+  @@map("api_key_usage")
+  @@index([apiKeyId])
+  @@index([userId])
 }

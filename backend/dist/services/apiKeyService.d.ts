@@ -47,5 +47,9 @@ export declare class ApiKeyService {
         };
     }>;
     static hasPermission(permissions: Record<string, any>, requiredPermission: string): boolean;
+    static logApiKeyUsage(apiKeyId: string, endpoint: string, method: string, userId: string, status: string, ipAddress: string, userAgent: string, responseTime: number): Promise<void>;
+    static getApiKeyUsages(apiKeyId: string, userId: string, limit?: number, startDate?: Date, endDate?: Date): Promise<any[]>;
+    static getApiKeyUsageStats(apiKeyId: string, userId: string, days?: number): Promise<any>;
 }
+export default ApiKeyService;
 //# sourceMappingURL=apiKeyService.d.ts.map

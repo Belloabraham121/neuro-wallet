@@ -1,7 +1,7 @@
-import crypto from 'crypto';
-import bcrypt from 'bcryptjs';
-import { prisma } from '../index';
-import { logger } from '../config/logger';
+import crypto from "crypto";
+import bcrypt from "bcryptjs";
+import { prisma } from "../index";
+import { logger } from "../config/logger";
 
 export interface CreateApiKeyData {
   name: string;
@@ -37,10 +37,10 @@ export class ApiKeyService {
    * Generate a new API key
    */
   static generateApiKey(): string {
-    const prefix = process.env.API_KEY_PREFIX || 'sk_';
-    const length = parseInt(process.env.API_KEY_LENGTH || '32');
+    const prefix = process.env.API_KEY_PREFIX || "sk_";
+    const length = parseInt(process.env.API_KEY_LENGTH || "32");
     const randomBytes = crypto.randomBytes(length);
-    const apiKey = prefix + randomBytes.toString('hex');
+    const apiKey = prefix + randomBytes.toString("hex");
     return apiKey;
   }
 
@@ -48,7 +48,7 @@ export class ApiKeyService {
    * Hash API key for secure storage
    */
   static async hashApiKey(apiKey: string): Promise<string> {
-    const saltRounds = parseInt(process.env.BCRYPT_ROUNDS || '12');
+    const saltRounds = parseInt(process.env.BCRYPT_ROUNDS || "12");
     return await bcrypt.hash(apiKey, saltRounds);
   }
 
@@ -69,7 +69,9 @@ export class ApiKeyService {
   /**
    * Create a new API key
    */
-  static async createApiKey(data: CreateApiKeyData): Promise<CreateApiKeyResult> {
+  static async createApiKey(
+    data: CreateApiKeyData
+  ): Promise<CreateApiKeyResult> {
     const { name, permissions = {}, expiresAt, userId } = data;
 
     // Check if user has reached API key limit
@@ -80,9 +82,9 @@ export class ApiKeyService {
       },
     });
 
-    const maxApiKeys = parseInt(process.env.MAX_API_KEYS_PER_USER || '10');
+    const maxApiKeys = parseInt(process.env.MAX_API_KEYS_PER_USER || "10");
     if (existingKeysCount >= maxApiKeys) {
-      throw new Error('API_KEY_LIMIT_REACHED');
+      throw new Error("API_KEY_LIMIT_REACHED");
     }
 
     // Generate API key
@@ -129,7 +131,7 @@ export class ApiKeyService {
         isActive: true,
       },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: "desc",
       },
     });
 
@@ -148,7 +150,10 @@ export class ApiKeyService {
   /**
    * Get a specific API key by ID
    */
-  static async getApiKeyById(keyId: string, userId: string): Promise<ApiKeyResponse | null> {
+  static async getApiKeyById(
+    keyId: string,
+    userId: string
+  ): Promise<ApiKeyResponse | null> {
     const apiKey = await prisma.apiKey.findFirst({
       where: {
         id: keyId,
@@ -190,7 +195,7 @@ export class ApiKeyService {
     });
 
     if (!apiKey) {
-      throw new Error('API_KEY_NOT_FOUND');
+      throw new Error("API_KEY_NOT_FOUND");
     }
 
     const updatedKey = await prisma.apiKey.update({
@@ -225,7 +230,7 @@ export class ApiKeyService {
     });
 
     if (!apiKey) {
-      throw new Error('API_KEY_NOT_FOUND');
+      throw new Error("API_KEY_NOT_FOUND");
     }
 
     await prisma.apiKey.update({
@@ -241,33 +246,30 @@ export class ApiKeyService {
    */
   static async validateApiKey(apiKey: string) {
     if (!apiKey) {
-      throw new Error('API_KEY_REQUIRED');
+      throw new Error("API_KEY_REQUIRED");
     }
 
     // Find API key by prefix (first 8 characters)
     const keyPrefix = this.createKeyPrefix(apiKey);
-    const apiKeyRecord = await prisma.apiKey.findFirst({
+    const apiKeyRecord = (await prisma.apiKey.findFirst({
       where: {
         keyPrefix,
         isActive: true,
-        OR: [
-          { expiresAt: null },
-          { expiresAt: { gt: new Date() } },
-        ],
+        OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
       },
       include: {
         user: true,
       },
-    }) as any;
+    })) as any;
 
     if (!apiKeyRecord) {
-      throw new Error('INVALID_API_KEY');
+      throw new Error("INVALID_API_KEY");
     }
 
     // Verify the full API key
     const isValid = await this.verifyApiKey(apiKey, apiKeyRecord.keyHash);
     if (!isValid) {
-      throw new Error('INVALID_API_KEY');
+      throw new Error("INVALID_API_KEY");
     }
 
     // Update last used timestamp
@@ -298,7 +300,7 @@ export class ApiKeyService {
     permissions: Record<string, any>,
     requiredPermission: string
   ): boolean {
-    if (!permissions || typeof permissions !== 'object') {
+    if (!permissions || typeof permissions !== "object") {
       return false;
     }
 
@@ -310,4 +312,172 @@ export class ApiKeyService {
     // Check specific permission
     return permissions[requiredPermission] === true;
   }
+
+  /**
+   * Log API key usage (placeholder - requires ApiKeyUsage model in schema)
+   * TODO: Add ApiKeyUsage model to Prisma schema to enable this functionality
+   */
+  static async logApiKeyUsage(
+    apiKeyId: string,
+    endpoint: string,
+    method: string,
+    userId: string,
+    status: string,
+    ipAddress: string,
+    userAgent: string,
+    responseTime: number
+  ): Promise<void> {
+    try {
+      // TODO: Uncomment when ApiKeyUsage model is added to Prisma schema
+      /*
+      await prisma.apiKeyUsage.create({
+        data: {
+          apiKeyId,
+          endpoint,
+          method,
+          userId,
+          status,
+          ipAddress,
+          userAgent,
+          responseTime,
+        },
+      });
+      */
+
+      logger.info(`API key usage logged: ${apiKeyId} for endpoint ${endpoint}`);
+    } catch (error) {
+      logger.error(`Failed to log API key usage: ${error}`);
+    }
+  }
+
+  /**
+   * Get usage statistics for an API key (placeholder - requires ApiKeyUsage model)
+   * TODO: Add ApiKeyUsage model to Prisma schema to enable this functionality
+   */
+  static async getApiKeyUsages(
+    apiKeyId: string,
+    userId: string,
+    limit: number = 100,
+    startDate?: Date,
+    endDate?: Date
+  ): Promise<any[]> {
+    // TODO: Implement when ApiKeyUsage model is added
+    logger.info(`Getting usage for API key: ${apiKeyId}`);
+    return [];
+
+    /*
+    const whereClause: any = {
+      apiKeyId,
+      apiKey: {
+        userId,
+      },
+    };
+
+    if (startDate) {
+      whereClause.createdAt = { ...whereClause.createdAt, gte: startDate };
+    }
+    if (endDate) {
+      whereClause.createdAt = { ...whereClause.createdAt, lte: endDate };
+    }
+
+    const usages = await prisma.apiKeyUsage.findMany({
+      where: whereClause,
+      include: {
+        apiKey: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: limit,
+    });
+
+    return usages;
+    */
+  }
+
+  /**
+   * Get usage summary statistics for an API key (placeholder - requires ApiKeyUsage model)
+   * TODO: Add ApiKeyUsage model to Prisma schema to enable this functionality
+   */
+  static async getApiKeyUsageStats(
+    apiKeyId: string,
+    userId: string,
+    days: number = 30
+  ): Promise<any> {
+    // TODO: Implement when ApiKeyUsage model is added
+    logger.info(`Getting usage stats for API key: ${apiKeyId}`);
+
+    return {
+      apiKeyId,
+      periodDays: days,
+      totalRequests: 0,
+      successRate: 0,
+      errorRate: 0,
+      avgResponseTime: 0,
+    };
+
+    /*
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const [totalRequests, successCount, errorCount, avgResponseTime] = await Promise.all([
+      prisma.apiKeyUsage.count({
+        where: {
+          apiKeyId,
+          apiKey: { userId },
+          createdAt: { gte: startDate },
+        },
+      }),
+      prisma.apiKeyUsage.count({
+        where: {
+          apiKeyId,
+          apiKey: { userId },
+          createdAt: { gte: startDate },
+          status: 'success',
+        },
+      }),
+      prisma.apiKeyUsage.count({
+        where: {
+          apiKeyId,
+          apiKey: { userId },
+          createdAt: { gte: startDate },
+          status: 'error',
+        },
+      }),
+      prisma.apiKeyUsage.aggregate({
+        where: {
+          apiKeyId,
+          apiKey: { userId },
+          createdAt: { gte: startDate },
+          status: 'success',
+        },
+        _avg: {
+          responseTime: true,
+        },
+      }),
+    ]);
+
+    return {
+      apiKeyId,
+      periodDays: days,
+      totalRequests,
+      successRate: totalRequests > 0 ? (successCount / totalRequests) * 100 : 0,
+      errorRate: totalRequests > 0 ? (errorCount / totalRequests) * 100 : 0,
+      avgResponseTime: avgResponseTime._avg.responseTime || 0,
+    };
+    */
+  }
 }
+
+export default ApiKeyService;

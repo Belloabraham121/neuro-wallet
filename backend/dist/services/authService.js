@@ -188,6 +188,55 @@ class AuthService {
             tokens,
         };
     }
+    static async handlePhoneAuth(phoneNumber, ipAddress, userAgent) {
+        let socialAuth = await index_1.prisma.socialAuthMapping.findUnique({
+            where: {
+                provider_providerId: {
+                    provider: 'PHONE',
+                    providerId: phoneNumber,
+                },
+            },
+            include: { user: true },
+        });
+        let user;
+        if (socialAuth) {
+            user = socialAuth.user;
+        }
+        else {
+            user = await index_1.prisma.user.create({
+                data: {
+                    email: `${phoneNumber.replace('+', '')}@phone.local`,
+                    firstName: null,
+                    lastName: null,
+                },
+            });
+            logger_1.logger.info(`New phone user created: ${phoneNumber}`);
+            await index_1.prisma.socialAuthMapping.create({
+                data: {
+                    provider: 'PHONE',
+                    providerId: phoneNumber,
+                    providerData: {
+                        phoneNumber,
+                    },
+                    isVerified: true,
+                    userId: user.id,
+                },
+            });
+            logger_1.logger.info(`Phone auth mapping created for user: ${phoneNumber}`);
+        }
+        const tokens = this.generateTokens(user.id);
+        await this.createSession(tokens.refreshToken, user.id, ipAddress, userAgent);
+        return {
+            user: {
+                id: user.id,
+                email: user.email,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                createdAt: user.createdAt,
+            },
+            tokens,
+        };
+    }
 }
 exports.AuthService = AuthService;
 //# sourceMappingURL=authService.js.map
